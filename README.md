@@ -25,15 +25,15 @@ A comprehensive web-based tool for managing and tracking Star Atlas SAGE product
 - Export or copy your Star Atlas inventory as CSV format
 - The CSV should include columns: `Item`, `Total Units`, `USDC Value`, and location data
 
-### 2. Load Your Inventory
-- **Paste Method**: Copy your CSV data and paste it into the text area
-- **File Upload**: Upload your CSV file directly
-- The app will automatically parse and process your inventory
-
-### 3. Select Contract & Location
+### 2. Select Contract & Location
 - Choose your desired contract from the dropdown
 - Set the quantity you want to craft (default: 100)
 - Select your crafting location (default: MRZ-6)
+
+### 3. Load Your Inventory
+- **Paste Method**: Copy your CSV data and paste it into the text area
+- **File Upload**: Upload your CSV file directly
+- The app will automatically parse and process your inventory
 
 ### 4. Track Progress
 - Progress bars automatically generate showing:
