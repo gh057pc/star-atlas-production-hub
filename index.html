@@ -266,6 +266,14 @@
             transition: width 0.5s ease;
             position: relative;
         }
+        .progress-bar-component {
+            background: linear-gradient(145deg, #4a90e2, #357abd) !important;
+            box-shadow: 0 0 8px rgba(74, 144, 226, 0.4) !important;
+        }
+        .progress-bar-data {
+            background: linear-gradient(145deg, #5ba3f5, #4a90e2) !important;
+            box-shadow: 0 0 8px rgba(91, 163, 245, 0.4) !important;
+        }
         .progress-bar::after {
             content: '';
             position: absolute;
@@ -1884,8 +1892,17 @@ function generateProgressBar(materialKey, availableQty, requiredQty, visibleWidt
         const barColor = componentColors[materialKey] || '#E0F7FA';
         const textColor = getTextColor(barColor);
         const showTextInsideBar = materialGroup !== 'compound material';
+        
+        // Determine progress bar class based on material group
+        let progressBarClass = 'progress-bar';
+        if (materialGroup === 'component') {
+            progressBarClass += ' progress-bar-component';
+        } else if (materialGroup === 'data') {
+            progressBarClass += ' progress-bar-data';
+        }
+        
         return `
-            <div class="progress-bar progress-bar-${materialKey.replace(/\s+/g, '-')}" role="progressbar"
+            <div class="${progressBarClass} progress-bar-${materialKey.replace(/\s+/g, '-')}" role="progressbar"
                  style="width: ${visibleWidth}%; color: ${textColor};"
                  aria-valuenow="${availableQty}" aria-valuemin="0" aria-valuemax="${requiredQty}">
                 ${showTextInsideBar ? progress.toFixed(2) + '%' : ''}
@@ -1949,8 +1966,17 @@ if (totalSegmentPercentage === 0) totalSegmentPercentage = 1;
             }
             
             const showTextInsideBar = materialGroup !== 'compound material';
+            
+            // Determine progress bar class based on material group
+            let progressBarClass = 'progress-bar';
+            if (materialGroup === 'component') {
+                progressBarClass += ' progress-bar-component';
+            } else if (materialGroup === 'data') {
+                progressBarClass += ' progress-bar-data';
+            }
+            
             html += `
-                <div class="progress-bar progress-bar-${segment.type}" role="progressbar"
+                <div class="${progressBarClass} progress-bar-${segment.type}" role="progressbar"
                      style="width: ${scaledWidth}%; color: ${textColor};"
                      aria-valuenow="${segment.qty}" aria-valuemin="0" aria-valuemax="${totalQty}"
                      title="${displayType}: ${formatNumber(segment.qty)}">
