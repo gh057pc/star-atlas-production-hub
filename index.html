@@ -2178,7 +2178,12 @@ if (totalSegmentPercentage === 0) totalSegmentPercentage = 1;
             }
             
             const fullDisplayType = segment.type === 'raw' ? 'Raw' : segment.type.charAt(0).toUpperCase() + segment.type.slice(1).replace('-', ' ');
-            const displayType = getAbbreviation(fullDisplayType);
+            
+            // Determine if we should use abbreviation based on segment width
+            // Use abbreviation if segment is less than 8% of total width or if name is very long
+            const shouldUseAbbreviation = scaledWidth < 8 || fullDisplayType.length > 12;
+            const displayType = shouldUseAbbreviation ? getAbbreviation(fullDisplayType) : fullDisplayType;
+            
             const segmentProgress = (segment.qty / totalQty) * 100;
             
             // Debug logging for copper ore and copper HTML generation
