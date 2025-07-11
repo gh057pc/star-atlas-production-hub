@@ -2052,6 +2052,10 @@ function generateProgressBar(materialKey, availableQty, requiredQty, visibleWidt
             // Create a darker version of the color for gradient
             const darkerColor = materialColor + '99'; // Add some transparency/darkness
             customStyle = `background: linear-gradient(145deg, ${materialColor}, ${materialColor}CC) !important; box-shadow: 0 0 8px ${materialColor}66 !important;`;
+        } else if (materialGroup === 'compound material') {
+            // Use material-specific color for compound materials
+            const materialColor = componentColors[materialKey] || '#ff6b35';
+            customStyle = `background: linear-gradient(145deg, ${materialColor}, ${materialColor}CC) !important; box-shadow: 0 0 8px ${materialColor}66 !important;`;
         } else if (materialGroup === 'component') {
             progressBarClass += ' progress-bar-component';
         } else if (materialGroup === 'data') {
@@ -2116,6 +2120,19 @@ if (totalSegmentPercentage === 0) totalSegmentPercentage = 1;
             
             if (materialGroup === 'raw material') {
                 // For raw material progress bars, use the material's specific color for ALL segments
+                const materialColor = componentColors[materialKey] || '#E0F7FA';
+                // Create variations of the material color for different segments
+                if (segment.type === 'raw') {
+                    // Main material color for raw segments
+                    barColor = materialColor;
+                    customStyle = `background: linear-gradient(145deg, ${materialColor}, ${materialColor}CC) !important; box-shadow: 0 0 8px ${materialColor}66 !important;`;
+                } else {
+                    // Slightly darker/more transparent version for crafted segments
+                    barColor = materialColor;
+                    customStyle = `background: linear-gradient(145deg, ${materialColor}AA, ${materialColor}88) !important; box-shadow: 0 0 6px ${materialColor}44 !important; opacity: 0.8;`;
+                }
+            } else if (materialGroup === 'compound material') {
+                // For compound material progress bars, use the material's specific color for ALL segments
                 const materialColor = componentColors[materialKey] || '#E0F7FA';
                 // Create variations of the material color for different segments
                 if (segment.type === 'raw') {
