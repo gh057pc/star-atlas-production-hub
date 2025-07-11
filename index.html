@@ -2093,7 +2093,12 @@ if (qty > 0 && relevantMaterials.includes(component.toLowerCase())) {
         }
     });
     
-segments.sort((a, b) => b.qty - a.qty);
+// Sort segments to show raw materials first, then others by quantity
+segments.sort((a, b) => {
+    if (a.type === 'raw' && b.type !== 'raw') return -1;
+    if (a.type !== 'raw' && b.type === 'raw') return 1;
+    return b.qty - a.qty;
+});
 let totalSegmentPercentage = segments.reduce((sum, segment) => sum + segment.width, 0);
 if (totalSegmentPercentage === 0) totalSegmentPercentage = 1;
 
@@ -2105,21 +2110,75 @@ if (totalSegmentPercentage === 0) totalSegmentPercentage = 1;
             if (index === segments.length - 1) {
                 scaledWidth = remainingWidth;
             }
-            // Use material-specific color for raw material segments, otherwise use default colors
+            // Use material-specific color for all segments in raw material progress bars
             let barColor;
             let customStyle = '';
             
-            if (segment.type === 'raw' && materialGroup === 'raw material') {
-                // For raw material progress bars, use the material's specific color
-                barColor = componentColors[materialKey] || '#E0F7FA';
-                customStyle = `background: linear-gradient(145deg, ${barColor}, ${barColor}CC) !important; box-shadow: 0 0 8px ${barColor}66 !important;`;
+            if (materialGroup === 'raw material') {
+                // For raw material progress bars, use the material's specific color for ALL segments
+                const materialColor = componentColors[materialKey] || '#E0F7FA';
+                // Create variations of the material color for different segments
+                if (segment.type === 'raw') {
+                    // Main material color for raw segments
+                    barColor = materialColor;
+                    customStyle = `background: linear-gradient(145deg, ${materialColor}, ${materialColor}CC) !important; box-shadow: 0 0 8px ${materialColor}66 !important;`;
+                } else {
+                    // Slightly darker/more transparent version for crafted segments
+                    barColor = materialColor;
+                    customStyle = `background: linear-gradient(145deg, ${materialColor}AA, ${materialColor}88) !important; box-shadow: 0 0 6px ${materialColor}44 !important; opacity: 0.8;`;
+                }
             } else {
-                // For segments representing other components, use their colors or default
+                // For non-raw materials, use their original colors or defaults
                 barColor = segment.type === 'raw' ? '#E0F7FA' : componentColors[segment.type] || '#E0F7FA';
             }
             
             const textColor = getTextColor(barColor);
-            const displayType = segment.type === 'raw' ? 'Raw' : segment.type.charAt(0).toUpperCase() + segment.type.slice(1).replace('-', ' ');
+            
+            // Create abbreviation function for long names
+            function getAbbreviation(name) {
+                if (name === 'Raw') return 'Raw';
+                
+                // Handle special cases
+                const specialCases = {
+                    'particle accelerator': 'PA',
+                    'electromagnet': 'EM',
+                    'crystal lattice': 'CL',
+                    'graphene': 'GR',
+                    'superconductor': 'SC',
+                    'framework': 'FW',
+                    'hydrocarbon': 'HC',
+                    'survey data unit': 'SDU',
+                    'diamond': 'DM',
+                    'polymer': 'PO',
+                    'steel': 'ST',
+                    'titanium': 'TI',
+                    'copper ore': 'CuO',
+                    'copper': 'Cu',
+                    'iron ore': 'FeO',
+                    'iron': 'Fe',
+                    'biomass': 'BM',
+                    'nitrogen': 'N',
+                    'hydrogen': 'H',
+                    'carbon': 'C',
+                    'silicon': 'Si',
+                    'lumanite': 'LU',
+                    'rochinol': 'RO',
+                    'chiral structures': 'CS',
+                    'exotic matter': 'EM',
+                    'aerogel': 'AG'
+                };
+                
+                const lowerName = name.toLowerCase();
+                if (specialCases[lowerName]) {
+                    return specialCases[lowerName];
+                }
+                
+                // Default: take first letter of each word
+                return name.split(' ').map(word => word.charAt(0).toUpperCase()).join('');
+            }
+            
+            const fullDisplayType = segment.type === 'raw' ? 'Raw' : segment.type.charAt(0).toUpperCase() + segment.type.slice(1).replace('-', ' ');
+            const displayType = getAbbreviation(fullDisplayType);
             const segmentProgress = (segment.qty / totalQty) * 100;
             
             // Debug logging for copper ore and copper HTML generation
@@ -2148,7 +2207,7 @@ if (totalSegmentPercentage === 0) totalSegmentPercentage = 1;
                 <div class="${progressBarClass} progress-bar-${segment.type}" role="progressbar"
                      style="width: ${scaledWidth}%; color: ${textColor}; ${customStyle}"
                      aria-valuenow="${segment.qty}" aria-valuemin="0" aria-valuemax="${totalQty}"
-                     title="${displayType}: ${formatNumber(segment.qty)}">
+                     title="${fullDisplayType}: ${formatNumber(segment.qty)}">
                     ${showTextInsideBar ? displayType : ''}
                 </div>
             `;
