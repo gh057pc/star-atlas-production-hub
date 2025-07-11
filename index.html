@@ -1,0 +1,1979 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SAGE Contract Production Hub</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Papa Parse -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 50%, #2d2d2d 100%);
+            background-attachment: fixed;
+            color: #e0e0e0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 14px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 900px;
+            background: linear-gradient(145deg, #1e1e1e, #2a2a2a);
+            border: 1px solid #444;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 
+                0 8px 32px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1),
+                inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #ff6b35, transparent);
+        }
+        .top-sections {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            gap: 20px;
+        }
+        .resources-container, .contracts-container {
+            flex: 1;
+            background: linear-gradient(145deg, #252525, #1a1a1a);
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 
+                0 4px 16px rgba(0, 0, 0, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            position: relative;
+        }
+        .resource-readout {
+            margin-bottom: 12px;
+        }
+        .resource-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            background: linear-gradient(145deg, #2a2a2a, #1e1e1e);
+            border: 1px solid #333;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+        .resource-item:hover {
+            background: linear-gradient(145deg, #333, #2a2a2a);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+        .resource-name {
+            font-size: 1rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+.resource-value {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #ffffff;
+}
+        .resources-container::before, .contracts-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #ff6b35, transparent);
+        }
+        h1, h3, h4 {
+            color: #ff6b35;
+            font-weight: 600;
+            text-shadow: 0 0 8px rgba(255, 107, 53, 0.3);
+            margin-bottom: 15px;
+        }
+        h1 {
+            font-size: 2.2rem;
+            text-align: center;
+            margin-bottom: 30px;
+            background: linear-gradient(45deg, #ff6b35, #f7931e);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        h1:before, h3:before, h4:before {
+            content: '⚡ ';
+            color: #ff6b35;
+        }
+        h3 {
+            font-size: 1.1rem;
+            border-bottom: 1px solid #333;
+            padding-bottom: 8px;
+        }
+        label {
+            color: #bbb;
+            font-weight: 500;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 0.5px;
+        }
+        .form-control, .form-select {
+            background: linear-gradient(145deg, #2a2a2a, #1e1e1e);
+            color: #e0e0e0;
+            border: 1px solid #444;
+            border-radius: 6px;
+            padding: 10px 15px;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        .form-control:focus, .form-select:focus {
+            background: linear-gradient(145deg, #2d2d2d, #222);
+            color: #fff;
+            border-color: #ff6b35;
+            box-shadow: 
+                inset 0 2px 4px rgba(0, 0, 0, 0.1),
+                0 0 0 3px rgba(255, 107, 53, 0.1);
+            outline: none;
+        }
+        .btn-primary {
+            background: linear-gradient(145deg, #ff6b35, #f7931e);
+            border: none;
+            color: #fff;
+            font-weight: 600;
+            padding: 10px 20px;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .btn-primary:hover {
+            background: linear-gradient(145deg, #f7931e, #ff6b35);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 107, 53, 0.4);
+        }
+        .btn-secondary {
+            background: linear-gradient(145deg, #555, #333);
+            border: none;
+            color: #fff;
+            font-weight: 600;
+            padding: 10px 20px;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .btn-secondary:hover {
+            background: linear-gradient(145deg, #666, #444);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+        }
+        .btn-danger {
+            background: linear-gradient(145deg, #e74c3c, #c0392b);
+            border: none;
+            color: #fff;
+            font-weight: 600;
+            padding: 10px 20px;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .btn-danger:hover {
+            background: linear-gradient(145deg, #c0392b, #e74c3c);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4);
+        }
+        .btn-success {
+            background: linear-gradient(145deg, #27ae60, #229954);
+            border: none;
+            color: #fff;
+            font-weight: 600;
+            padding: 10px 20px;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(39, 174, 96, 0.3);
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .btn-success:hover {
+            background: linear-gradient(145deg, #229954, #27ae60);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(39, 174, 96, 0.4);
+        }
+        .recipe-form {
+            margin-top: 30px;
+            background: linear-gradient(145deg, #252525, #1a1a1a);
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+            position: relative;
+        }
+        .recipe-form::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #ff6b35, transparent);
+        }
+        .progress-container, .locations-container {
+            margin-top: 30px;
+        }
+        .progress-container {
+            background: linear-gradient(145deg, #252525, #1a1a1a);
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+            position: relative;
+        }
+        .progress-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #ff6b35, transparent);
+        }
+        .progress {
+            background: linear-gradient(145deg, #1a1a1a, #111);
+            border: 1px solid #333;
+            border-radius: 6px;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+            animation: fadeIn 0.5s ease-in;
+            height: 19px; /* Reduced by 20% from 24px */
+            overflow: hidden;
+        }
+        .progress-bar {
+            background: linear-gradient(145deg, #ff6b35, #f7931e);
+            box-shadow: 0 0 8px rgba(255, 107, 53, 0.4);
+            transition: width 0.5s ease;
+            position: relative;
+        }
+        .progress-bar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 50%;
+            background: linear-gradient(to bottom, rgba(255, 255, 255, 0.2), transparent);
+        }
+        .material-row {
+            margin-bottom: 15px;
+        }
+        #csvStatus {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 6px;
+            background: linear-gradient(145deg, #2a2a2a, #1e1e1e);
+            border: 1px solid #333;
+        }
+        .locations-container {
+            background: linear-gradient(145deg, #252525, #1a1a1a);
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+            position: relative;
+        }
+        .locations-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #ff6b35, transparent);
+        }
+        .location-group {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: linear-gradient(145deg, #2a2a2a, #1e1e1e);
+            border: 1px solid #444;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+        .location-group:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+        }
+        .location-group h4 {
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+            color: #ff6b35;
+        }
+        .location-group h4:before {
+            content: '🏭 ';
+        }
+        .material-bar {
+            margin-bottom: 10px;
+        }
+        .material-bar label {
+            font-size: 0.9rem;
+            display: block;
+            margin-bottom: 5px;
+            color: #ccc;
+        }
+        .material-bar .progress {
+            height: 14px;
+            background: linear-gradient(145deg, #1a1a1a, #111);
+            border: 1px solid #333;
+            border-radius: 4px;
+        }
+        .material-bar .progress-bar {
+            background: linear-gradient(145deg, #ff6b35, #f7931e);
+            box-shadow: 0 0 6px rgba(255, 107, 53, 0.3);
+        }
+        .total-bar .progress {
+            height: 18px;
+            background: linear-gradient(145deg, #1a1a1a, #111);
+            border: 1px solid #444;
+            border-radius: 4px;
+        }
+        .total-bar .progress-bar {
+            background: linear-gradient(145deg, #27ae60, #229954);
+            box-shadow: 0 0 8px rgba(39, 174, 96, 0.4);
+        }
+        .location-total {
+            border-top: 1px solid #444;
+            padding-top: 12px;
+        }
+        .total-summary {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 12px;
+            background: linear-gradient(145deg, #27ae60, #229954);
+            border-radius: 4px;
+            box-shadow: 0 0 8px rgba(39, 174, 96, 0.4);
+        }
+        .total-label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #fff;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .total-value {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #fff;
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
+        }
+        .group-header {
+            margin-top: 30px;
+            margin-bottom: 20px;
+        }
+        .group-header h5 {
+            color: #ff6b35;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-bottom: 2px solid #333;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .nav-tabs {
+            border-bottom: 2px solid #333;
+        }
+        .nav-tabs .nav-link {
+            background: linear-gradient(145deg, #2a2a2a, #1e1e1e);
+            color: #ccc;
+            border: 1px solid #333;
+            border-bottom: none;
+            margin-right: 5px;
+            border-radius: 8px 8px 0 0;
+            transition: all 0.3s ease;
+        }
+        .nav-tabs .nav-link:hover {
+            background: linear-gradient(145deg, #333, #2a2a2a);
+            color: #fff;
+        }
+        .nav-tabs .nav-link.active {
+            background: linear-gradient(145deg, #ff6b35, #f7931e);
+            color: #fff;
+            border-color: #ff6b35;
+        }
+        .tab-content {
+            background: linear-gradient(145deg, #252525, #1a1a1a);
+            border: 1px solid #333;
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            padding: 20px;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        /* Custom styles for component segments */
+        .progress-bar-raw {
+            background-color: #E0F7FA; /* Neon White for raw materials */
+        }
+        .progress-bar-graphene {
+            background-color: #D3D3D3; /* Light Grey */
+        }
+        .progress-bar-crystal-lattice {
+            background-color: #0066CC; /* Dark Neon Blue */
+        }
+        .progress-bar-hydrocarbon {
+            background-color: #00FF00; /* Neon Green */
+        }
+        .progress-bar-polymer {
+            background-color: #FFA500; /* Neon Orange */
+        }
+        .progress-bar-energy-substrate {
+            background-color: #00E5FF; /* Neon Blue */
+        }
+        .progress-bar-fuel {
+            background-color: #00E5FF; /* Neon Cyan */
+        }
+        .progress-bar-ammunition {
+            background-color: #FF1744; /* Neon Red */
+        }
+        .progress-bar-food {
+            background-color: #00FF00; /* Neon Green */
+        }
+        .progress-bar-mud-contract-gottis-favor {
+            background-color: #FF00FF; /* Neon Purple */
+        }
+        .progress-bar-mud-contract-default {
+            background-color: #FF69B4; /* Neon Pink */
+        }
+        .progress-bar-silica {
+            background-color: #FFFF00; /* Neon Yellow */
+        }
+        .progress-bar-titanium {
+            background-color: #C0C0C0; /* Neon Silver */
+        }
+        .progress-bar-titanium-frame {
+            background-color: #800080; /* Neon Purple */
+        }
+        .progress-bar-titanium-ore {
+            background-color: #808080; /* Neon Gray */
+        }
+        .progress-bar-framework {
+            background-color: #4682B4; /* Neon Steel Blue */
+        }
+        .progress-bar-copper-ore {
+            background-color: #B87333; /* Copper Ore */
+        }
+        .progress-bar-lumanite {
+            background-color: #00FFCC; /* Lumanite */
+        }
+        .progress-bar-radiation-absorber {
+            background-color: #FF4500; /* Radiation Absorber */
+        }
+        .progress-bar-power-source {
+            background-color: #FFD700; /* Power Source */
+        }
+        .progress-bar-electromagnet {
+            background-color: #CD7F32; /* Electromagnet */
+        }
+        .progress-bar-copper-wire {
+            background-color: #B87333; /* Copper Wire */
+        }
+        .progress-bar-copper {
+            background-color: #B87333; /* Copper */
+        }
+        .progress-bar-magnet {
+            background-color: #A9A9A9; /* Magnet */
+        }
+        .progress-bar-iron {
+            background-color: #808080; /* Iron */
+        }
+        .progress-bar-iron-ore {
+            background-color: #696969; /* Iron Ore */
+        }
+        .progress-bar-particle-accelerator {
+            background-color: #FF1493; /* Particle Accelerator */
+        }
+        .progress-bar-super-conductor {
+            background-color: #20B2AA; /* Super Conductor */
+        }
+        .progress-bar-strange-emitter {
+            background-color: #BA55D3; /* Strange Emitter */
+        }
+        .progress-bar-mud-contract-quantum-nodes {
+            background-color: #9400D3; /* Quantum Nodes */
+        }
+        .progress-bar-mud-contract-starpath-cells {
+            background-color: #FF69B4; /* Starpath Cells */
+        }
+        .progress-bar-nitrogen {
+            background-color: #87CEEB; /* Nitrogen - Light Sky Blue */
+        }
+        .progress-bar-aerogel {
+            background-color: #E6E6FA; /* Aerogel - Lavender */
+        }
+        .progress-bar-field-stabilizer {
+            background-color: #40E0D0; /* Field Stabilizer - Turquoise */
+        }
+        .progress-bar-diamond {
+            background-color: #B0E0E6; /* Diamond - Powder Blue */
+        }
+        .progress-bar-hydrogen {
+            background-color: #7FDBFF; /* Hydrogen - Light Cyan Blue */
+        }
+        .progress-bar-carbon {
+            background-color: #93C572; /* Carbon - Pistachio Green */
+        }
+        .text-graphene {
+            color: #D3D3D3;
+            text-shadow: 0 0 5px #D3D3D3;
+        }
+        .text-crystal-lattice {
+            color: #0066CC;
+            text-shadow: 0 0 5px #0066CC;
+        }
+        .text-hydrocarbon {
+            color: #00FF00;
+            text-shadow: 0 0 5px #00FF00;
+        }
+        .text-polymer {
+            color: #FFA500;
+            text-shadow: 0 0 5px #FFA500;
+        }
+        .text-energy-substrate {
+            color: #00E5FF;
+            text-shadow: 0 0 5px #00E5FF;
+        }
+        .text-mud-contract-gottis-favor {
+            color: #FF00FF;
+            text-shadow: 0 0 5px #FF00FF;
+        }
+        .text-mud-contract-default {
+            color: #FF69B4;
+            text-shadow: 0 0 5px #FF69B4;
+        }
+        .text-silica {
+            color: #FFFF00;
+            text-shadow: 0 0 5px #FFFF00;
+        }
+        .text-titanium {
+            color: #C0C0C0;
+            text-shadow: 0 0 5px #C0C0C0;
+        }
+        .text-titanium-frame {
+            color: #800080;
+            text-shadow: 0 0 5px #800080;
+        }
+        .text-titanium-ore {
+            color: #808080;
+            text-shadow: 0 0 5px #808080;
+        }
+        .text-framework {
+            color: #4682B4;
+            text-shadow: 0 0 5px #4682B4;
+        }
+        .text-copper-ore {
+            color: #B87333;
+            text-shadow: 0 0 5px #B87333;
+        }
+        .text-lumanite {
+            color: #00FFCC;
+            text-shadow: 0 0 5px #00FFCC;
+        }
+        .text-radiation-absorber {
+            color: #FF4500;
+            text-shadow: 0 0 5px #FF4500;
+        }
+        .text-power-source {
+            color: #FFD700;
+            text-shadow: 0 0 5px #FFD700;
+        }
+        .text-electromagnet {
+            color: #CD7F32;
+            text-shadow: 0 0 5px #CD7F32;
+        }
+        .text-copper-wire {
+            color: #B87333;
+            text-shadow: 0 0 5px #B87333;
+        }
+        .text-copper {
+            color: #B87333;
+            text-shadow: 0 0 5px #B87333;
+        }
+        .text-magnet {
+            color: #A9A9A9;
+            text-shadow: 0 0 5px #A9A9A9;
+        }
+        .text-iron {
+            color: #808080;
+            text-shadow: 0 0 5px #808080;
+        }
+        .text-iron-ore {
+            color: #696969;
+            text-shadow: 0 0 5px #696969;
+        }
+        .text-particle-accelerator {
+            color: #FF1493;
+            text-shadow: 0 0 5px #FF1493;
+        }
+        .text-super-conductor {
+            color: #20B2AA;
+            text-shadow: 0 0 5px #20B2AA;
+        }
+        .text-strange-emitter {
+            color: #BA55D3;
+            text-shadow: 0 0 5px #BA55D3;
+        }
+        .text-mud-contract-quantum-nodes {
+            color: #9400D3;
+            text-shadow: 0 0 5px #9400D3;
+        }
+        .text-mud-contract-starpath-cells {
+            color: #FF69B4;
+            text-shadow: 0 0 5px #FF69B4;
+        }
+        .text-diamond {
+            color: #B0E0E6;
+            text-shadow: 0 0 5px #B0E0E6;
+        }
+        .text-hydrogen {
+            color: #7FDBFF;
+            text-shadow: 0 0 5px #7FDBFF;
+        }
+        .text-carbon {
+            color: #93C572;
+            text-shadow: 0 0 5px #93C572;
+        }
+        .text-survey-data-unit {
+            color: #FF4444 !important;
+            text-shadow: 0 0 5px #FF4444 !important;
+        }
+        .progress-bar-survey-data-unit {
+            background-color: #FF4444 !important;
+        }
+        .text-nitrogen {
+            color: #87CEEB;
+            text-shadow: 0 0 5px #87CEEB;
+        }
+        .text-aerogel {
+            color: #E6E6FA;
+            text-shadow: 0 0 5px #E6E6FA;
+        }
+        .text-field-stabilizer {
+            color: #40E0D0;
+            text-shadow: 0 0 5px #40E0D0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>SAGE Contract Production Hub</h1>
+
+        <!-- Top Sections (Resources and Contracts) -->
+        <div class="top-sections">
+            <!-- Resources Section -->
+            <div id="resourcesContainer" class="resources-container"></div>
+
+            <!-- Contracts Section -->
+            <div id="contractsContainer" class="contracts-container"></div>
+        </div>
+
+        <!-- Recipe Selection -->
+        <div class="recipe-form">
+            <div class="mb-3">
+                <label for="recipeSelect" class="form-label">Select Recipe</label>
+                <select id="recipeSelect" class="form-select">
+                    <option value="" disabled selected>Select a Recipe</option>
+                </select>
+            </div>
+
+            <!-- Custom Recipe Input -->
+            <div id="customRecipeInput" style="display: none;">
+                <div class="mb-3">
+                    <label for="customComponentName" class="form-label">Component Name</label>
+                    <input type="text" id="customComponentName" class="form-control" placeholder="e.g., Engine">
+                </div>
+                <h4>Materials</h4>
+                <div id="materialInputs">
+                    <div class="material-row row">
+                        <div class="col">
+                            <input type="text" class="form-control material-name" placeholder="Material (e.g., Carbon)">
+                        </div>
+                        <div class="col">
+                            <input type="number" class="form-control material-quantity" placeholder="Quantity" min="0">
+                        </div>
+                        <div class="col-auto">
+                            <button class="btn btn-danger remove-material">Remove</button>
+                        </div>
+                    </div>
+                </div>
+                <button id="addMaterial" class="btn btn-secondary mt-2">Add Material</button>
+            </div>
+
+            <!-- Quantity to Craft and Crafting Location -->
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="quantity" class="form-label">Quantity to Craft</label>
+                    <input type="number" id="quantity" class="form-control" min="1" value="100">
+                </div>
+                <div class="col-md-6">
+                    <label for="craftingLocation" class="form-label">Crafting Location</label>
+                    <select id="craftingLocation" class="form-select">
+                        <!-- Options will be populated dynamically -->
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- CSV Input Section -->
+        <div class="mt-4">
+            <h4>Load Inventory</h4>
+            <p style="color: #ccc; font-size: 0.9rem; margin-bottom: 15px;">
+                💡 <strong>Get your inventory data:</strong> Visit <a href="https://atlas.eveeye.com/" target="_blank" style="color: #ff6b35; text-decoration: none;">atlas.eveeye.com</a> to copy or export your Star Atlas inventory as CSV
+            </p>
+            <ul class="nav nav-tabs" id="csvInputTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="paste-tab" data-bs-toggle="tab" data-bs-target="#pasteInput" type="button" role="tab" aria-controls="pasteInput" aria-selected="true">Paste CSV</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="file-tab" data-bs-toggle="tab" data-bs-target="#fileInput" type="button" role="tab" aria-controls="fileInput" aria-selected="false">Upload CSV</button>
+                </li>
+            </ul>
+            <div class="tab-content" id="csvInputTabContent">
+                <!-- Paste CSV Tab -->
+                <div class="tab-pane fade show active" id="pasteInput" role="tabpanel" aria-labelledby="paste-tab">
+                    <div class="mt-3">
+                        <label for="csvPaste" class="form-label">Paste Inventory CSV Data</label>
+                        <textarea id="csvPaste" class="form-control" rows="5" placeholder="Paste your CSV data here (e.g., Item,Total Units,USDC Value,...)"></textarea>
+                        <div class="mt-2">
+                            <button id="loadStoredData" class="btn btn-success" style="display: none;">Reload Last Data</button>
+                        </div>
+                    </div>
+                </div>
+                <!-- File Upload Tab -->
+                <div class="tab-pane fade" id="fileInput" role="tabpanel" aria-labelledby="file-tab">
+                    <div class="mt-3">
+                        <label for="csvFile" class="form-label">Select Inventory CSV</label>
+                        <input type="file" id="csvFile" class="form-control" accept=".csv">
+                        <button id="uploadCsv" class="btn btn-primary mt-2">Submit</button>
+                    </div>
+                </div>
+            </div>
+            <div id="csvStatus" class="mt-3"></div>
+        </div>
+
+        <!-- Crafting Progress Sliders -->
+        <div id="progressContainer" class="progress-container"></div>
+
+        <!-- Material Locations Section -->
+        <div id="locationsContainer" class="locations-container"></div>
+    </div>
+
+    <script>
+let inventory = {};
+let rawInventory = {};
+let selectedFile = null;
+let storedCsvData = null; // Store the last successfully parsed CSV data
+const MAX_RESOURCE_VALUE = 10000000;
+let MAX_CONTRACT_VALUE = 500000;
+
+        // Hardcoded resource group mapping based on Star Atlas SAGE data
+        const resourceGroupMapping = {
+            // Raw materials
+            'arco': 'raw material',
+            'biomass': 'raw material', 
+            'carbon': 'raw material',
+            'copper ore': 'raw material',
+            'diamond': 'raw material',
+            'hydrogen': 'raw material',
+            'iron ore': 'raw material',
+            'lumanite': 'raw material',
+            'nitrogen': 'raw material',
+            'rochinol': 'raw material',
+            'silica': 'raw material',
+            'titanium ore': 'raw material',
+            
+            // Consumables
+            'ammunition': 'consumable',
+            'food': 'consumable',
+            'fuel': 'consumable',
+            'golden ticket 2624': 'consumable',
+            'toolkit': 'consumable',
+            
+            // Compound materials
+            'aerogel': 'compound material',
+            'copper': 'compound material',
+            'copper wire': 'compound material',
+            'crystal lattice': 'compound material',
+            'electronics': 'compound material',
+            'graphene': 'compound material',
+            'hydrocarbon': 'compound material',
+            'iron': 'compound material',
+            'magnet': 'compound material',
+            'polymer': 'compound material',
+            'steel': 'compound material',
+            'titanium': 'compound material',
+            
+            // Components
+            'electromagnet': 'component',
+            'energy substrate': 'component',
+            'field stabilizer': 'component',
+            'framework': 'component',
+            'particle accelerator': 'component',
+            'power source': 'component',
+            'radiation absorber': 'component',
+            'strange emitter': 'component',
+            'super conductor': 'component',
+            
+            // Data
+            'survey data unit': 'data'
+        };
+        
+        // Get resource group from mapping
+        const getResourceGroup = (itemName) => {
+            return resourceGroupMapping[itemName.toLowerCase()] || 'unknown';
+        };
+        
+        // Legacy arrays for backward compatibility
+        const rawMaterials = ['Arco', 'Biomass', 'Carbon', 'Copper Ore', 'Diamond', 'Hydrogen', 'Iron Ore', 'Lumanite', 'Nitrogen', 'Rochinol', 'Silica', 'Titanium Ore'];
+        const bottomMaterials = ['Survey Data Unit'];
+
+        const locationColumns = [
+            "MRZ-1", "MRZ-10", "MRZ-11", "MRZ-12", "MRZ-2", "MRZ-3", "MRZ-4", "MRZ-5", "MRZ-6",
+            "MRZ-7", "MRZ-8", "MRZ-9", "MUD Central Station", "MUD-2", "MUD-4", "MUD-5"
+        ];
+
+        const componentRecipes = {
+            "graphene": { "carbon": 5 },
+            "crystal lattice": { "diamond": 2, "hydrogen": 7 },
+            "hydrocarbon": { "carbon": 2, "hydrogen": 2 },
+            "polymer": { "hydrocarbon": 1 },
+            "energy substrate": { "graphene": 1, "polymer": 2 },
+            "titanium frame": { "titanium": 5, "silica": 10 },
+            "titanium": { "titanium ore": 1 },
+            "radiation absorber": { "energy substrate": 1, "crystal lattice": 1 },
+            "power source": { "graphene": 1, "lumanite": 2 },
+            "electromagnet": { "copper wire": 4, "magnet": 1 },
+            "copper wire": { "copper": 1 },
+            "magnet": { "iron": 2 },
+            "iron": { "iron ore": 1 },
+            "particle accelerator": { "super conductor": 1, "strange emitter": 1, "copper ore": 5 },
+            "super conductor": { "copper wire": 5, "graphene": 2 },
+            "strange emitter": { "polymer": 2, "lumanite": 4, "copper ore": 3 },
+            "copper": { "copper ore": 1 },
+            "aerogel": { "nitrogen": 4, "silica": 2 },
+            "field stabilizer": { "aerogel": 1, "crystal lattice": 1 },
+        };
+
+        const componentColors = {
+            "graphene": "#D3D3D3",
+            "crystal lattice": "#0066CC",
+            "hydrocarbon": "#00FF00",
+            "polymer": "#FFA500",
+            "energy substrate": "#00E5FF",
+            "survey data unit": "#FF4444",
+            "fuel": "#00E5FF",
+            "ammunition": "#FF1744",
+            "food": "#00FF00",
+            "mud contract - gotti's favor": "#FF00FF",
+            "mud contract - default": "#FF69B4",
+            "mud contract - quantum nodes": "#9400D3",
+            "mud contract - starpath cells": "#FF69B4",
+            "silica": "#FFFF00",
+            "titanium": "#C0C0C0",
+            "titanium frame": "#800080",
+            "titanium ore": "#808080",
+            "copper ore": "#B87333",
+            "framework": "#4682B4",
+            "lumanite": "#00FFCC",
+            "radiation absorber": "#FF4500",
+            "power source": "#FFD700",
+            "electromagnet": "#CD7F32",
+            "copper wire": "#B87333",
+            "copper": "#B87333",
+            "magnet": "#A9A9A9",
+            "iron": "#808080",
+            "iron ore": "#696969",
+            "particle accelerator": "#FF1493",
+            "super conductor": "#20B2AA",
+            "strange emitter": "#BA55D3",
+            "hydrogen": "#7FDBFF",
+            "carbon": "#93C572",
+            "diamond": "#B0E0E6",
+            "nitrogen": "#87CEEB",
+            "aerogel": "#E6E6FA",
+            "field stabilizer": "#40E0D0"
+        };
+
+        const recipes = {
+            mud_contract_gottis_favor: {
+                "Crystal Lattice": 94,
+                "Energy Substrate": 57,
+                "Carbon": 783,
+                "Survey Data Unit": 5,
+                "Diamond": 188,
+                "Hydrogen": 1006,
+                "Graphene": 87,
+                "Hydrocarbon": 174,
+                "Polymer": 174
+            },
+            mud_contract_default: {
+                "Energy Substrate": 57,
+                "Framework": 91,
+                "Survey Data Unit": 5,
+                "Carbon": 702,
+                "Hydrogen": 312,
+                "Titanium Ore": 468,
+                "Titanium": 468,
+                "Polymer": 156
+            },
+            mud_contract_starpath_cells: {
+                "Carbon": 1227,
+                "Hydrogen": 528,
+                "Lumanite": 318,
+                "Diamond": 96,
+                "Crystal Lattice": 48,
+                "Graphene": 207,
+                "Hydrocarbon": 96,
+                "Polymer": 96,
+                "Energy Substrate": 48,
+                "Radiation Absorber": 48,
+                "Power Source": 159,
+                "Survey Data Unit": 1
+            },
+            mud_contract_quantum_nodes: {
+                "Carbon": 420,
+                "Hydrogen": 120,
+                "Lumanite": 120,
+                "Iron Ore": 334,
+                "Iron": 334,
+                "Copper Ore": 818,
+                "Copper": 818,
+                "Magnet": 167,
+                "Polymer": 60,
+                "Hydrocarbon": 60,
+                "Graphene": 60,
+                "Strange Emitter": 30,
+                "Super Conductor": 30,
+                "Copper Wire": 818,
+                "Electromagnet": 167,
+                "Particle Accelerator": 30,
+                "Survey Data Unit": 1
+            }
+        };
+
+        // Helper function to get all materials (raw and intermediate) for a recipe
+        function getAllRecipeMaterials(recipe) {
+            const materials = new Set();
+            if (!recipe || Object.keys(recipe).length === 0) return Array.from(materials); // Return empty set if recipe is invalid
+
+            Object.keys(recipe).forEach(m => materials.add(m.toLowerCase()));
+
+            function addComponentMaterials(component) {
+                const recipe = componentRecipes[component.toLowerCase()];
+                if (!recipe) return;
+                Object.keys(recipe).forEach(material => {
+                    materials.add(material.toLowerCase());
+                    if (componentRecipes[material.toLowerCase()]) {
+                        addComponentMaterials(material);
+                    }
+                });
+            }
+
+            Object.keys(recipe).forEach(component => {
+                if (componentRecipes[component.toLowerCase()]) {
+                    addComponentMaterials(component);
+                }
+            });
+
+            return Array.from(materials);
+        }
+
+        // Populate the Recipe Selection dropdown dynamically
+        function populateRecipeDropdown() {
+            const recipeSelect = document.getElementById('recipeSelect');
+            recipeSelect.querySelectorAll('option:not([value=""])').forEach(option => option.remove());
+
+            Object.keys(recipes).forEach(recipeKey => {
+                const option = document.createElement('option');
+                option.value = recipeKey;
+                option.textContent = recipeKey
+                    .replace(/_/g, ' ')
+                    .replace(/\b\w/g, char => char.toUpperCase())
+                    .replace('Mud Contract Default', 'MUD Contract - Default')
+                    .replace('Mud Contract Gottis Favor', "MUD Contract - Gotti's Favor")
+                    .replace('Mud Contract Starpath Cells', 'MUD Contract - Starpath Cells')
+                    .replace('Mud Contract Quantum Nodes', 'MUD Contract - Quantum Nodes');
+                recipeSelect.appendChild(option);
+            });
+
+            if (Object.keys(recipes).length > 0) {
+                recipeSelect.value = Object.keys(recipes)[0];
+            }
+        }
+
+        // Populate the Crafting Location dropdown
+        function populateCraftingLocationDropdown() {
+            const craftingLocationSelect = document.getElementById('craftingLocation');
+            craftingLocationSelect.innerHTML = '';
+            locationColumns.forEach(location => {
+                const option = document.createElement('option');
+                option.value = location;
+                option.textContent = location;
+                craftingLocationSelect.appendChild(option);
+            });
+            craftingLocationSelect.value = "MRZ-6";
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            populateRecipeDropdown();
+            populateCraftingLocationDropdown();
+        });
+
+        function formatNumber(num) {
+            if (num >= 1000000) {
+                const value = num / 1000000;
+                const formatted = value.toFixed(2).replace(/\.?0+$/, '');
+                return `${formatted}M`;
+            } else if (num >= 1000) {
+                const value = num / 1000;
+                const formatted = value.toFixed(2).replace(/\.?0+$/, '');
+                return `${formatted}k`;
+            }
+            return num.toString();
+        }
+
+        function getTextColor(backgroundColor) {
+            // Handle undefined or invalid colors
+            if (!backgroundColor || typeof backgroundColor !== 'string' || !backgroundColor.startsWith('#')) {
+                return '#ffffff'; // Default to white text
+            }
+            const r = parseInt(backgroundColor.slice(1, 3), 16);
+            const g = parseInt(backgroundColor.slice(3, 5), 16);
+            const b = parseInt(backgroundColor.slice(5, 7), 16);
+            const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
+            return luminance > 128 ? '#000000' : '#ffffff';
+        }
+
+        function preprocessCsvData(rawData) {
+            const lines = rawData.split(/\r?\n/);
+            let headerIndex = lines.findIndex(line => line.trim() !== "" && line.includes("Item"));
+            if (headerIndex === -1) return null;
+
+            let csvLines = lines.slice(headerIndex);
+            csvLines = csvLines.filter(line => {
+                const firstField = line.split('\t')[0];
+                return firstField && !firstField.includes("Total CargoTotal USDC Value");
+            });
+
+            const expectedFieldCount = 19;
+            csvLines = csvLines.map((line, index) => {
+                let fields = line.split('\t').map(field => field.trim()).filter(field => field !== "");
+                while (fields.length < expectedFieldCount) fields.push("");
+                if (fields.length > expectedFieldCount) fields = fields.slice(0, expectedFieldCount);
+                return fields.join('\t');
+            });
+
+            return csvLines.join('\n');
+        }
+
+function adjustRawMaterialQuantities(selectedRecipeMaterials = []) {
+            console.log('🚀 adjustRawMaterialQuantities() called');
+            console.log('🚀 Inventory items:', Object.keys(inventory));
+            console.log('🚀 Selected recipe materials:', selectedRecipeMaterials);
+            const rawMaterialAdjustments = {};
+            // Initialize for all raw materials from hardcoded mapping
+            const allRawMaterials = Object.keys(resourceGroupMapping).filter(key => 
+                resourceGroupMapping[key] === 'raw material'
+            );
+            
+            allRawMaterials.forEach(material => {
+                rawMaterialAdjustments[material.toLowerCase()] = { total: 0, locations: {}, contributions: {} };
+                locationColumns.forEach(location => {
+                    rawMaterialAdjustments[material.toLowerCase()].locations[location] = 0;
+                });
+                // Initialize contributions for all components with recipes
+                Object.keys(componentRecipes).forEach(component => {
+                    rawMaterialAdjustments[material.toLowerCase()].contributions[component] = 0;
+                });
+            });
+
+            function calculateRawMaterialUsage(component, quantity, contributionPath = [], topLevelComponent = null) {
+                const recipe = componentRecipes[component.toLowerCase()];
+                if (!recipe) return;
+
+                if (contributionPath.includes(component.toLowerCase())) return;
+
+                const newPath = [...contributionPath, component.toLowerCase()];
+                // Use the topLevelComponent if provided, otherwise use the current component
+                const actualTopComponent = topLevelComponent || component.toLowerCase();
+
+                Object.entries(recipe).forEach(([material, amount]) => {
+                    const totalMaterialUsed = quantity * amount;
+
+                    // Check if material is raw material using hardcoded mapping
+                    if (getResourceGroup(material) === 'raw material') {
+                        // Always attribute to the actual top-level component from inventory
+                        rawMaterialAdjustments[material.toLowerCase()].total += totalMaterialUsed;
+                        rawMaterialAdjustments[material.toLowerCase()].contributions[actualTopComponent] =
+                            (rawMaterialAdjustments[material.toLowerCase()].contributions[actualTopComponent] || 0) + totalMaterialUsed;
+                        
+                        console.log(`🔍 Raw material contribution: ${material} += ${totalMaterialUsed} from ${actualTopComponent} (via ${component})`);
+                    } else if (componentRecipes[material.toLowerCase()]) {
+                        // Recursively calculate for intermediate components, passing the top-level component
+                        calculateRawMaterialUsage(material, totalMaterialUsed, newPath, actualTopComponent);
+                    }
+                });
+            }
+
+            // Process all components with recipes
+            console.log('🚀 Processing components...');
+            Object.entries(inventory).forEach(([item, data]) => {
+                const component = item.toLowerCase();
+                // If no selectedRecipeMaterials provided (e.g., during CSV loading), process all components
+                // Otherwise, only process components that are in the selected recipe
+                const shouldProcess = selectedRecipeMaterials.length === 0 || selectedRecipeMaterials.includes(component);
+                if (componentRecipes[component] && shouldProcess) {
+                    console.log(`✅ Processing: ${item} (${component}) - quantity: ${data.quantity}`);
+                    // Pass the component itself as the top-level component
+                    calculateRawMaterialUsage(component, data.quantity, [], component);
+                } else {
+                    if (component.includes('copper') || component.includes('particle') || component.includes('electromagnet')) {
+                        console.log(`❌ NOT processing: ${item} (${component}) - no recipe found`);
+                    }
+                }
+            });
+
+            // Process all raw materials from CSV grouping and legacy arrays
+            allRawMaterials.forEach(material => {
+                const materialKey = material.toLowerCase();
+                if (rawMaterialAdjustments[materialKey]) {
+                    if (inventory[materialKey]) {
+                        inventory[materialKey].quantity += rawMaterialAdjustments[materialKey].total;
+                        // Ensure contributions object exists and is properly populated
+                        inventory[materialKey].contributions = rawMaterialAdjustments[materialKey].contributions || {};
+                    } else if (rawMaterialAdjustments[materialKey].total > 0) {
+                        // Create entry for materials that have adjustments but aren't in inventory
+                        inventory[materialKey] = {
+                            quantity: rawMaterialAdjustments[materialKey].total,
+                            usdcValue: 0,
+                            locations: {},
+                            contributions: rawMaterialAdjustments[materialKey].contributions || {}
+                        };
+                    }
+                }
+            });
+        }
+
+      function adjustIntermediateComponentQuantities(recipe) {
+    // DISABLED: This function was causing double-counting of contributions
+    // The adjustRawMaterialQuantities() function already handles all contribution tracking
+    // through its recursive logic, so this function is redundant and causes issues
+    return;
+    
+    return;
+    
+    const intermediateAdjustments = {
+        "graphene": { total: 0, contributions: {} },
+        "polymer": { total: 0, contributions: {} },
+        "copper wire": { total: 0, contributions: {} },
+        "magnet": { total: 0, contributions: {} },
+        "super conductor": { total: 0, contributions: {} },
+        "strange emitter": { total: 0, contributions: {} },
+        "copper": { total: 0, contributions: {} },
+        "crystal lattice": { total: 0, contributions: {} },
+        "energy substrate": { total: 0, contributions: {} },
+        "hydrocarbon": { total: 0, contributions: {} }
+    };
+
+    const relevantMaterials = getAllRecipeMaterials(recipe);
+    const intermediateMaterials = new Set();
+    Object.values(componentRecipes).forEach(recipe => {
+        Object.keys(recipe).forEach(material => {
+            if (componentRecipes[material.toLowerCase()]) {
+                intermediateMaterials.add(material.toLowerCase());
+            }
+        });
+    });
+    const componentsUsingIntermediates = Array.from(intermediateMaterials);
+    componentsUsingIntermediates.forEach(component => {
+        if (relevantMaterials.includes(component.toLowerCase())) {
+            Object.keys(intermediateAdjustments).forEach(intermediate => {
+                intermediateAdjustments[intermediate].contributions[component] = 0;
+            });
+        }
+    });
+
+    function calculateIntermediateUsage(component, quantity, contributionPath = []) {
+        const recipe = componentRecipes[component.toLowerCase()];
+        if (!recipe || !relevantMaterials.includes(component.toLowerCase())) return;
+        if (contributionPath.includes(component.toLowerCase())) return;
+        const newPath = [...contributionPath, component.toLowerCase()];
+        Object.entries(recipe).forEach(([material, amount]) => {
+            const totalMaterialUsed = quantity * amount;
+            // Track contribution for all components in the path, not just the top-level
+            if (Object.keys(intermediateAdjustments).includes(material.toLowerCase()) && relevantMaterials.includes(material.toLowerCase())) {
+                newPath.forEach(topComponent => {
+                    intermediateAdjustments[material.toLowerCase()].total += totalMaterialUsed;
+                    intermediateAdjustments[material.toLowerCase()].contributions[topComponent] =
+                        (intermediateAdjustments[material.toLowerCase()].contributions[topComponent] || 0) + totalMaterialUsed;
+                });
+            }
+            // Recursively process nested components
+            if (componentRecipes[material.toLowerCase()] && relevantMaterials.includes(material.toLowerCase())) {
+                calculateIntermediateUsage(material, totalMaterialUsed, newPath);
+            }
+        });
+    }
+
+    Object.entries(inventory).forEach(([item, data]) => {
+        const component = item.toLowerCase();
+        if (componentsUsingIntermediates.includes(component) && relevantMaterials.includes(component)) {
+            calculateIntermediateUsage(component, data.quantity);
+        }
+    });
+    Object.keys(intermediateAdjustments).forEach(material => {
+        if (inventory[material]) {
+            inventory[material].quantity += intermediateAdjustments[material].total;
+            inventory[material].contributions = intermediateAdjustments[material].contributions;
+        } else if (intermediateAdjustments[material].total > 0) {
+            // Only create entry if it's actually needed in the current recipe
+            const relevantMaterials = getAllRecipeMaterials(recipe);
+            if (relevantMaterials.includes(material.toLowerCase())) {
+                inventory[material] = {
+                    quantity: intermediateAdjustments[material].total,
+                    usdcValue: 0,
+                    locations: {},
+                    contributions: intermediateAdjustments[material].contributions || {}
+                };
+            }
+        }
+    });
+}
+
+function parseCsvData(data, isFile = false) {
+// Only save data if parsing is successful (we'll set this later in the function)
+    let processedData = data;
+    if (!isFile) {
+        processedData = preprocessCsvData(data);
+        if (!processedData) {
+            document.getElementById('csvStatus').innerHTML = `<p style="color: #ff5555;">Error: Invalid CSV data. Please ensure it starts with a header row containing 'Item', 'Total Units', and 'USDC Value'.</p>`;
+            return;
+        }
+    }
+
+    Papa.parse(processedData, {
+        header: true,
+        skipEmptyLines: true,
+        delimiter: "",  // Auto-detect delimiter
+        quoteChar: '"',
+        escapeChar: '"',
+        transformHeader: function(h) {
+            return h.trim(); // Clean up headers
+        },
+        skipEmptyLines: 'greedy',
+        complete: function(results) {
+            // Filter out only critical errors, ignore quote warnings
+            const criticalErrors = results.errors.filter(error => 
+                error.type === 'Delimiter' || 
+                error.type === 'FieldMismatch' ||
+                (error.type === 'Quotes' && error.message.includes('unterminated'))
+            );
+            
+            if (criticalErrors.length > 0) {
+                console.warn('CSV parsing warnings:', results.errors);
+                document.getElementById('csvStatus').innerHTML = `<p style="color: #ff5555;">Error parsing CSV. Check the console for details: ${criticalErrors.map(e => e.message).join(", ")}</p>`;
+                return;
+            }
+
+            const requiredHeaders = ["Item", "Total Units", "USDC Value"];
+            const headers = results.meta.fields;
+            const missingHeaders = requiredHeaders.filter(h => !headers.includes(h));
+            if (missingHeaders.length > 0) {
+                document.getElementById('csvStatus').innerHTML = `<p style="color: #ff5555;">Error: Missing required columns: ${missingHeaders.join(", ")}.</p>`;
+                return;
+            }
+
+            inventory = {};
+            rawInventory = {};
+            
+            results.data.forEach(row => {
+                if (row.Item && row["Total Units"] && row["USDC Value"] !== undefined) {
+                    const quantity = parseInt(row["Total Units"].replace(/,/g, '')) || 0;
+                    const usdcValue = parseFloat(row["USDC Value"]) || 0;
+                    const locations = {};
+                    locationColumns.forEach(location => {
+                        const value = row[location] && row[location] !== "—" ? parseInt(row[location].replace(/,/g, '')) || 0 : 0;
+                        if (value > 0) {
+                            locations[location] = value;
+                        }
+                    });
+                    const itemKey = row.Item.toLowerCase();
+                    inventory[itemKey] = { quantity, usdcValue, locations };
+                    rawInventory[itemKey] = { quantity, usdcValue, locations: { ...locations } };
+                }
+            });
+
+adjustRawMaterialQuantities();
+            adjustIntermediateComponentQuantities({});
+
+            if (Object.keys(inventory).length === 0) {
+                document.getElementById('csvStatus').innerHTML = `<p style="color: #ff5555;">Error: No valid data found in CSV. Ensure it has valid 'Item', 'Total Units', and 'USDC Value' entries.</p>`;
+            } else {
+                // Save the data only if parsing was successful
+                storedCsvData = data;
+                // Show the "Reload Last Data" button
+                document.getElementById('loadStoredData').style.display = 'inline-block';
+                
+                document.getElementById('csvStatus').innerHTML = `<p style="color: #00ff00;">CSV loaded successfully! ${Object.keys(inventory).length} items found.</p>`;
+                updateResourcesSection();
+                updateContractsSection();
+                // Auto-generate sliders for both paste and file upload
+                const recipeSelect = document.getElementById('recipeSelect').value;
+                if (recipeSelect && recipeSelect !== '') {
+                    console.log('Auto-generating sliders for recipe:', recipeSelect);
+                    handleGenerateSliders({ preventDefault: () => {} }, true); // Auto-generate sliders
+                } else {
+                    document.getElementById('csvStatus').innerHTML += `<p style="color: #ffaa00;">Please select a recipe above to generate sliders.</p>`;
+                }
+                
+                // Clear the CSV input field only for paste (not file upload)
+                if (!isFile) {
+                    document.getElementById('csvPaste').value = ''; // Clear the textarea
+                }
+            }
+        },
+        error: function(err) {
+            document.getElementById('csvStatus').innerHTML = `<p style="color: #ff5555;">Error parsing CSV: ${err}</p>`;
+        }
+    });
+}
+
+        document.getElementById('csvFile').addEventListener('change', function(e) {
+            selectedFile = e.target.files[0];
+            if (selectedFile) {
+                document.getElementById('csvStatus').innerHTML = `<p style="color: #00e5ff;">Selected file: ${selectedFile.name}. Click "Submit" to load.</p>`;
+            } else {
+                document.getElementById('csvStatus').innerHTML = `<p style="color: #ff5555;">No file selected.</p>`;
+            }
+        });
+
+        document.getElementById('uploadCsv').addEventListener('click', function(e) {
+            e.preventDefault();
+            if (!selectedFile) {
+                document.getElementById('csvStatus').innerHTML = `<p style="color: #ff5555;">Error: Please select a CSV file first.</p>`;
+                return;
+            }
+            parseCsvData(selectedFile, true);
+        });
+
+        // parseCsvPaste button removed - auto-parsing happens on paste
+
+        // Add event listener for the new "Reload Last Data" button
+        document.getElementById('loadStoredData').addEventListener('click', function(e) {
+            e.preventDefault();
+            if (!storedCsvData) {
+                document.getElementById('csvStatus').innerHTML = `<p style="color: #ff5555;">Error: No stored CSV data available. Please paste and load data first.</p>`;
+                return;
+            }
+            document.getElementById('csvStatus').innerHTML = `<p style="color: #00e5ff;">Reloading stored CSV data...</p>`;
+            parseCsvData(storedCsvData, false);
+        });
+
+        // Clear button removed - users can manually clear the textarea if needed
+
+        document.getElementById('csvPaste').addEventListener('paste', function(e) {
+            setTimeout(() => {
+                const csvText = document.getElementById('csvPaste').value.trim();
+                if (csvText) {
+                    storedCsvData = csvText; // Store the data
+                    parseCsvData(csvText, false);
+                }
+            }, 250); // Increased delay to ensure paste completes
+        });
+
+
+// CSV only mode: Blockchain elements removed for security and simplicity.
+        const updateCSVStatus = (message, color = '#00e5ff') => {
+            document.getElementById('csvStatus').innerHTML = `<p style="color: ${color};">${message}</p>`;
+        };
+
+        function updateResourcesSection() {
+            try {
+                const resourcesContainer = document.getElementById('resourcesContainer');
+                resourcesContainer.innerHTML = `<h3>Resources</h3>`;
+
+                const resources = [
+                    { name: "Fuel", key: "fuel" },
+                    { name: "Ammunition", key: "ammunition" },
+                    { name: "Food", key: "food" }
+                ];
+
+                resources.forEach(resource => {
+                    const resourceData = inventory[resource.key.toLowerCase()] || { quantity: 0 };
+                    const quantity = resourceData.quantity;
+                    const resourceColor = componentColors[resource.key.toLowerCase()] || '#ff6b35';
+
+                    const resourceItem = document.createElement('div');
+                    resourceItem.className = 'resource-readout mb-3';
+                    resourceItem.innerHTML = `
+                        <div class="resource-item">
+                            <span class="resource-name" style="color: ${resourceColor}; text-shadow: 0 0 5px ${resourceColor};">${resource.name}</span>
+                            <span class="resource-value">${formatNumber(quantity)}</span>
+                        </div>
+                    `;
+                    resourcesContainer.appendChild(resourceItem);
+                });
+            } catch (error) {
+                document.getElementById('resourcesContainer').innerHTML = `<h3>Resources</h3><p style="color: #ff5555;">Error loading resources: ${error.message}</p>`;
+            }
+        }
+
+        function updateContractsSection() {
+            try {
+                const contractsContainer = document.getElementById('contractsContainer');
+                contractsContainer.innerHTML = `<h3>Contracts</h3>`;
+
+                const contracts = [
+                    { name: "Gotti's Favor", key: "mud contract - gotti's favor" },
+                    { name: "Default", key: "mud contract - default" },
+                    { name: "Starpath Cells", key: "mud contract - starpath cells" },
+                    { name: "Quantum Nodes", key: "mud contract - quantum nodes" }
+                ];
+
+                contracts.forEach(contract => {
+                    const contractData = inventory[contract.key] || { quantity: 0, usdcValue: 0 };
+                    const contractCount = contractData.quantity;
+                    const totalValue = contractData.usdcValue;
+
+                    const progress = (contractCount / MAX_CONTRACT_VALUE) * 100;
+                    const displayWidth = Math.min(progress, 100);
+                    const barColor = componentColors[contract.key];
+                    const textColor = getTextColor(barColor);
+                    const usdcColor = totalValue > 0 ? '#00ff00' : '#e0f7fa';
+
+                    const contractBar = document.createElement('div');
+                    contractBar.className = 'mb-3';
+                    // Safe key handling for CSS class names
+                    const safeKey = (contract.key || '').replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '');
+                    contractBar.innerHTML = `
+                        <label>${contract.name}: ${formatNumber(contractCount)}/${formatNumber(MAX_CONTRACT_VALUE)} (<span style="color: ${usdcColor}; font-size: 0.7rem;">$${totalValue.toFixed(2)} USD</span>)</label>
+                        <div class="progress">
+                            <div class="progress-bar progress-bar-${safeKey}" role="progressbar"
+                                 style="width: ${displayWidth}%; color: ${textColor};"
+                                 title="${contract.name}: ${formatNumber(contractCount)} ($${totalValue.toFixed(2)} USD)"
+                                 aria-valuenow="${contractCount}" aria-valuemin="0" aria-valuemax="${MAX_CONTRACT_VALUE}">
+                            </div>
+                        </div>
+                    `;
+                    contractsContainer.appendChild(contractBar);
+                });
+            } catch (error) {
+                document.getElementById('contractsContainer').innerHTML = `<h3>Contracts</h3><p style="color: #ff5555;">Error loading contracts: ${error.message}</p>`;
+            }
+        }
+
+
+        document.getElementById('addMaterial').addEventListener('click', function() {
+            const materialInputs = document.getElementById('materialInputs');
+            const newRow = document.createElement('div');
+            newRow.className = 'material-row row';
+            newRow.innerHTML = `
+                <div class="col">
+                    <input type="text" class="form-control material-name" placeholder="Material (e.g., Carbon)">
+                </div>
+                <div class="col">
+                    <input type="number" class="form-control material-quantity" placeholder="Quantity" min="0">
+                </div>
+                <div class="col-auto">
+                    <button class="btn btn-danger remove-material">Remove</button>
+                </div>
+            `;
+            materialInputs.appendChild(newRow);
+        });
+
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('remove-material')) {
+                e.target.closest('.material-row').remove();
+            }
+        });
+
+        function updateLocationsSection(recipe, componentName) {
+            try {
+                const locationsContainer = document.getElementById('locationsContainer');
+                locationsContainer.innerHTML = `<h3>Galactic Hubs: Material Locations for ${componentName}</h3>`;
+
+                if (!recipe || Object.keys(recipe).length === 0) {
+                    locationsContainer.innerHTML += `<p style="color: #ff5555;">No materials in recipe.</p>`;
+                    return;
+                }
+
+                const materials = getAllRecipeMaterials(recipe);
+                if (materials.length === 0) {
+                    locationsContainer.innerHTML += `<p style="color: #ff5555;">No materials to display.</p>`;
+                    return;
+                }
+
+                const locationMap = {};
+                locationColumns.forEach(location => {
+                    locationMap[location] = [];
+                });
+
+                materials.forEach(materialKey => {
+                    const materialData = rawInventory[materialKey] || { quantity: 0, locations: {} };
+                    const locations = materialData.locations || {};
+                    Object.entries(locations).forEach(([location, quantity]) => {
+                        if (locationMap[location] && quantity > 0) {
+                            locationMap[location].push({ material: materialKey, quantity });
+                        }
+                    });
+                });
+
+                let globalMaxQuantity = 0;
+                Object.values(locationMap).forEach(materialList => {
+                    if (materialList.length > 0) {
+                        const maxAtLocation = Math.max(...materialList.map(item => item.quantity));
+                        if (maxAtLocation > globalMaxQuantity) {
+                            globalMaxQuantity = maxAtLocation;
+                        }
+                    }
+                });
+                globalMaxQuantity = globalMaxQuantity || 1;
+
+                const locationTotals = {};
+                let maxLocationTotal = 0;
+                Object.entries(locationMap).forEach(([location, materialList]) => {
+                    const total = materialList.reduce((sum, { quantity }) => sum + quantity, 0);
+                    locationTotals[location] = total;
+                    if (total > maxLocationTotal) {
+                        maxLocationTotal = total;
+                    }
+                });
+                maxLocationTotal = maxLocationTotal || 1;
+
+                const sortedLocations = Object.entries(locationMap).sort((a, b) => locationTotals[b[0]] - locationTotals[a[0]]);
+
+                sortedLocations.forEach(([location, materialList]) => {
+                    if (materialList.length === 0) return;
+
+                    const locationDiv = document.createElement('div');
+                    locationDiv.className = 'location-group';
+                    locationDiv.innerHTML = `<h4>Station ${location}</h4>`;
+
+                    materialList.sort((a, b) => b.quantity - a.quantity);
+
+                    // Find the maximum quantity at this specific location
+                    const locationMaxQuantity = Math.max(...materialList.map(item => item.quantity));
+                    
+                    materialList.forEach(({ material, quantity }) => {
+                        const percentage = (quantity / locationMaxQuantity) * 100;
+                        const displayWidth = Math.min(percentage, 100);
+                        const visibleWidth = Math.max(displayWidth, quantity > 0 ? 0.1 : 0);
+                        const materialDisplay = material.charAt(0).toUpperCase() + material.slice(1);
+
+                        const materialDiv = document.createElement('div');
+                        materialDiv.className = 'material-bar';
+                        materialDiv.innerHTML = `
+                            <label class="text-${material.replace(/\s+/g, '-')}" >${materialDisplay}: ${formatNumber(quantity)}</label>
+                            <div class="progress">
+                                <div class="progress-bar progress-bar-${material.replace(/\s+/g, '-')}" role="progressbar" style="width: ${visibleWidth}%;"
+                                     title="${materialDisplay}: ${formatNumber(quantity)}"
+                                     aria-valuenow="${quantity}" aria-valuemin="0" aria-valuemax="${locationMaxQuantity}">
+                                </div>
+                            </div>
+                        `;
+                        locationDiv.appendChild(materialDiv);
+                    });
+
+                    const totalQuantity = locationTotals[location];
+                    const totalPercentage = (totalQuantity / maxLocationTotal) * 100;
+                    const totalDisplayWidth = Math.min(totalPercentage, 100);
+
+                    const totalDiv = document.createElement('div');
+                    totalDiv.className = 'total-bar mt-2';
+                    totalDiv.innerHTML = `
+                        <label>Total Materials: ${formatNumber(totalQuantity)}</label>
+                        <div class="progress">
+                            <div class="progress-bar" role="progressbar" style="width: ${totalDisplayWidth}%;"
+                                 aria-valuenow="${totalQuantity}" aria-valuemin="0" aria-valuemax="${maxLocationTotal}">
+                            </div>
+                        </div>
+                    `;
+                    locationDiv.appendChild(totalDiv);
+
+                    locationsContainer.appendChild(locationDiv);
+                });
+
+                if (sortedLocations.every(([, materialList]) => materialList.length === 0)) {
+                    locationsContainer.innerHTML += `<p style="color: #ff5555;">No materials found in any locations.</p>`;
+                }
+            } catch (error) {
+                document.getElementById('locationsContainer').innerHTML = `<h3>Galactic Hubs: Material Locations</h3><p style="color: #ff5555;">Error loading locations: ${error.message}</p>`;
+            }
+        }
+
+        const submitButton = document.getElementById('submitRecipe');
+        const csvFile = document.getElementById('csvFile');
+
+        if(submitButton) {
+            submitButton.addEventListener('click', function(e) {
+                handleGenerateSliders(e, false);
+            });
+        }
+
+        if(csvFile) {
+            csvFile.addEventListener('change', function(e) {
+                const selectedFile = e.target.files[0];
+                if (selectedFile) {
+                    document.getElementById('csvStatus').innerHTML = `<p style="color: #00e5ff;">Selected file: ${selectedFile.name}. Click "Upload CSV" to load.</p>`;
+                } else {
+                    document.getElementById('csvStatus').innerHTML = `<p style="color: #ff5555;">No file selected.</p>`;
+                }
+            });
+        }
+
+        // parseCsvPaste and clear buttons removed - auto-parsing happens on paste
+
+        function handleGenerateSliders(e, shouldClearInput = false) {
+            e.preventDefault();
+
+            try {
+                const recipeSelect = document.getElementById('recipeSelect').value;
+                const quantityInput = document.getElementById('quantity');
+                const quantity = parseInt(quantityInput.value) || 1;
+                const craftingLocation = document.getElementById('craftingLocation').value;
+                let recipe = {};
+                let componentName = '';
+
+                MAX_CONTRACT_VALUE = quantity;
+
+                if (recipes[recipeSelect]) {
+                    recipe = recipes[recipeSelect];
+                    componentName = recipeSelect
+                        .replace(/_/g, ' ')
+                        .replace(/\b\w/g, char => char.toUpperCase())
+                        .replace('Mud Contract Default', 'MUD Contract - Default')
+                        .replace('Mud Contract Gottis Favor', "MUD Contract - Gotti's Favor")
+                        .replace('Mud Contract Starpath Cells', 'MUD Contract - Starpath Cells')
+                        .replace('Mud Contract Quantum Nodes', 'MUD Contract - Quantum Nodes');
+                    componentName += ' (Mine and Craft)';
+                } else {
+                    alert('Please select a valid recipe.');
+                    return;
+                }
+
+                if (!inventory || Object.keys(inventory).length === 0) {
+                    alert('Please upload or paste an inventory CSV first.');
+                    return;
+                }
+
+                if (!recipe || Object.keys(recipe).length === 0) {
+                    alert('Please define a recipe with at least one material.');
+                    return;
+                }
+
+// Reset inventory and recalculate quantities based on the selected recipe
+                inventory = JSON.parse(JSON.stringify(rawInventory)); // Deep copy to reset
+                const relevantMaterials = getAllRecipeMaterials(recipe);
+                // Only adjust quantities for relevant materials
+                adjustRawMaterialQuantities(relevantMaterials);
+
+                const progressContainer = document.getElementById('progressContainer');
+                progressContainer.innerHTML = ''; // Clear existing content
+                progressContainer.innerHTML = `<h3>Progress for ${componentName} (x${quantity})</h3>`;
+
+                const allMaterials = getAllRecipeMaterials(recipe);
+                const materials = Object.entries(recipe).filter(([material]) => allMaterials.includes(material.toLowerCase()));
+
+                function calculateDependencyDepth(material, depthCache = {}) {
+                    material = material.toLowerCase();
+                    if (material in depthCache) return depthCache[material];
+
+                    const recipe = componentRecipes[material];
+                    if (!recipe) return 0; // Raw materials have no dependencies
+
+                    const depth = 1 + Math.max(0, ...Object.keys(recipe).map(dep => calculateDependencyDepth(dep, depthCache)));
+                    depthCache[material] = depth;
+                    return depth;
+                }
+
+                // Define group-based sorting using hardcoded mapping
+                const getGroupOrder = (material) => {
+                    const materialGroup = getResourceGroup(material);
+                    // Order: raw material(0), consumable(1), compound material(2), component(3), data(5)
+                    const groupOrder = {
+                        'raw material': 0,
+                        'consumable': 1,
+                        'compound material': 2,
+                        'component': 3,
+                        'data': 5
+                    };
+                    const result = groupOrder[materialGroup] !== undefined ? groupOrder[materialGroup] : 999;
+                    console.log(`🔍 getGroupOrder(${material}) -> materialGroup: '${materialGroup}' -> order: ${result}`);
+                    return result;
+                };
+
+                // Sort materials by group order, then alphabetically within group
+                const sortedMaterials = [...materials].sort((a, b) => {
+                    const groupA = getGroupOrder(a[0]);
+                    const groupB = getGroupOrder(b[0]);
+                    
+                    
+                    if (groupA !== groupB) return groupA - groupB; // Sort by group first
+                    
+                    // Special case: Particle Accelerator and Electromagnet go to bottom of components
+                    if (groupA === 3 && groupB === 3) { // Both are components
+                        const bottomComponents = ['Electromagnet', 'Particle Accelerator'];
+                        const aIsBottom = bottomComponents.includes(a[0]);
+                        const bIsBottom = bottomComponents.includes(b[0]);
+                        
+                        if (aIsBottom && !bIsBottom) return 1; // Move a to end
+                        if (!aIsBottom && bIsBottom) return -1; // Move b to end
+                        if (aIsBottom && bIsBottom) {
+                            // Both are bottom components, sort by their order in the array
+                            return bottomComponents.indexOf(a[0]) - bottomComponents.indexOf(b[0]);
+                        }
+                    }
+                    
+                    // Special case: Crystal Lattice goes to bottom of compound materials
+                    if (groupA === 2 && groupB === 2) { // Both are compound materials
+                        if (a[0] === 'Crystal Lattice') return 1; // Move to end
+                        if (b[0] === 'Crystal Lattice') return -1; // Move to end
+                    }
+                    
+                    // Within the same group, sort alphabetically
+                    return a[0].localeCompare(b[0]);
+                });
+                
+
+                if (sortedMaterials.length === 0) {
+                    progressContainer.innerHTML += `<p style="color: #ff5555;">No materials to display.</p>`;
+                    return;
+                }
+
+                // Add group headers
+                let currentGroup = null;
+                const groupNames = {
+                    0: 'Raw Materials',
+                    1: 'Consumables', 
+                    2: 'Compound Materials',
+                    3: 'Components',
+                    5: 'Data'
+                };
+
+                for (const [material, recipeQty] of sortedMaterials) {
+                    const materialGroup = getGroupOrder(material);
+                    
+                    // Add group header if this is a new group
+                    if (currentGroup !== materialGroup) {
+                        currentGroup = materialGroup;
+                        const groupName = groupNames[materialGroup] || 'Other';
+                        const groupHeader = document.createElement('div');
+                        groupHeader.className = 'group-header mt-4 mb-2';
+                        groupHeader.innerHTML = `<h5 style="color: #00e5ff; border-bottom: 1px solid #00e5ff; padding-bottom: 5px; margin-bottom: 15px;">🔹 ${groupName}</h5>`;
+                        progressContainer.appendChild(groupHeader);
+                    }
+                    const materialKey = material.toLowerCase();
+                    const materialData = inventory[materialKey] || { quantity: 0, usdcValue: 0 };
+                    let availableQty = materialData.quantity;
+                    let usdcValue = materialData.usdcValue;
+
+                    const requiredQty = recipeQty * quantity;
+                    const safeRequiredQty = Math.max(requiredQty, 1);
+                    const progress = (availableQty / safeRequiredQty) * 100;
+                    const displayWidth = Math.min(progress, 100);
+                    const visibleWidth = Math.max(displayWidth, availableQty > 0 ? 0.1 : 0);
+                    
+                    // Debug logging for material processing
+                    console.log(`🎯 Processing material: ${material} (key: ${materialKey}) - available: ${availableQty}, required: ${requiredQty}`);
+                    if (materialKey === 'copper ore') {
+                        console.log('  🔶 This is copper ore! About to call generateProgressBar...');
+                    }
+
+                    let locationPercentageText = '';
+                    // Show location percentage for all materials that have location data
+                    const rawMaterialData = rawInventory[materialKey] || { quantity: 0, locations: {} };
+                    const totalQty = rawMaterialData.quantity;
+                    const qtyAtLocation = rawMaterialData.locations[craftingLocation] || 0;
+                    const percentageAtLocation = totalQty > 0 ? (qtyAtLocation / totalQty) * 100 : 0;
+                    
+                    // Only show location percentage if there's meaningful location data
+                    if (totalQty > 0 && Object.keys(rawMaterialData.locations).length > 0) {
+                        locationPercentageText = `, <span style="font-size: 0.7rem; color: white;">${percentageAtLocation.toFixed(1)}% at ${craftingLocation}</span>`;
+                    }
+
+                    let labelClass = 'text-magenta';
+                    if (componentColors[materialKey]) {
+                        labelClass = `text-${materialKey.replace(/\s+/g, '-')}`;
+                    }
+
+                    const usdcColor = usdcValue > 0 ? '#00ff00' : '#e0f7fa';
+
+                    const progressBarDiv = document.createElement('div');
+                    progressBarDiv.className = 'mb-3';
+                    
+                    // Debug: About to call generateProgressBar
+                    if (materialKey === 'copper ore') {
+                    }
+                    
+const progressBarHTML = generateProgressBar(materialKey, availableQty, requiredQty, visibleWidth, allMaterials);
+                    
+                    if (materialKey === 'copper ore') {
+                    }
+                    
+                    const materialColor = componentColors[materialKey] || '#ff6b35';
+                    progressBarDiv.innerHTML = `
+                        <label style="color: white;"><span style="text-shadow: 0 0 8px ${materialColor}, 0 0 12px ${materialColor};">${material}</span> (<span style="color: #b0fafa;">${formatNumber(availableQty)}</span>/<span style="color: #66e0e0;">${formatNumber(requiredQty)}</span>, <span style="color: ${usdcColor}; font-size: 0.7rem;">$${usdcValue.toFixed(2)} USD</span>${locationPercentageText})</label>
+                        <div class="progress">
+                            ${progressBarHTML}
+                        </div>
+                    `;
+                    progressContainer.appendChild(progressBarDiv);
+                }
+
+                updateContractsSection();
+                updateLocationsSection(recipe, componentName);
+                if (shouldClearInput) {
+                    document.getElementById('csvPaste').value = '';
+                }
+            } catch (error) {
+                const progressContainer = document.getElementById('progressContainer');
+                progressContainer.innerHTML = `<h3>Progress</h3><p style="color: #ff5555;">Error generating sliders: ${error.message}</p>`;
+            }
+        }
+
+function generateProgressBar(materialKey, availableQty, requiredQty, visibleWidth, relevantMaterials = []) {
+    
+    const intermediateComponents = [
+        "graphene", "polymer", "copper wire", "magnet", "super conductor", 
+        "strange emitter", "crystal lattice", "energy substrate"
+    ];
+
+    // Debug: Check which path we're taking using hardcoded mapping
+    const materialGroup = getResourceGroup(materialKey);
+    
+    const isRawMaterial = materialGroup === 'raw material';
+    const isIntermediate = intermediateComponents.includes(materialKey.toLowerCase());
+    const isMineableMaterial = isRawMaterial; // Raw materials are mineable
+    
+    if (materialKey === 'copper ore' || materialKey === 'copper') {
+        console.log(`🔍 ${materialKey} path analysis:`);
+        console.log('  Is mineable material?', isMineableMaterial);
+        console.log('  Is raw material?', isRawMaterial);
+        console.log('  Is intermediate?', isIntermediate);
+        console.log('  Material key:', materialKey);
+    }
+    
+    if (!isMineableMaterial && !isIntermediate) {
+        if (materialKey === 'copper ore') {
+            console.log('🚪 Taking simple progress bar path for copper ore');
+        }
+        const progress = (availableQty / Math.max(requiredQty, 1)) * 100;
+        const displayWidth = Math.min(progress, 100);
+        const barColor = componentColors[materialKey] || '#E0F7FA';
+        const textColor = getTextColor(barColor);
+        const showTextInsideBar = materialGroup !== 'compound material';
+        return `
+            <div class="progress-bar progress-bar-${materialKey.replace(/\s+/g, '-')}" role="progressbar"
+                 style="width: ${visibleWidth}%; color: ${textColor};"
+                 aria-valuenow="${availableQty}" aria-valuemin="0" aria-valuemax="${requiredQty}">
+                ${showTextInsideBar ? progress.toFixed(2) + '%' : ''}
+            </div>
+        `;
+    }
+    
+
+    const totalQty = availableQty;
+    const contributions = inventory[materialKey] && inventory[materialKey].contributions ? inventory[materialKey].contributions : {};
+    const rawQtyOriginal = totalQty - Object.values(contributions).reduce((a, b) => a + b, 0);
+    
+
+    const segments = [];
+    let rawPercentage = totalQty > 0 ? (rawQtyOriginal / totalQty) * 100 : 0;
+    segments.push({
+        type: 'raw',
+        width: Math.max(rawPercentage, rawQtyOriginal > 0 ? 0.1 : 0),
+        qty: rawQtyOriginal
+    });
+
+    Object.entries(contributions).forEach(([component, qty]) => {
+// Check if the component is relevant to the current recipe.
+if (qty > 0 && relevantMaterials.includes(component.toLowerCase())) {
+            const percentage = totalQty > 0 ? (qty / totalQty) * 100 : 0;
+            segments.push({
+                type: component.toLowerCase().replace(/\s+/g, '-'),
+                width: Math.max(percentage, 0.1),
+                qty: qty
+            });
+        }
+    });
+    
+segments.sort((a, b) => b.qty - a.qty);
+let totalSegmentPercentage = segments.reduce((sum, segment) => sum + segment.width, 0);
+if (totalSegmentPercentage === 0) totalSegmentPercentage = 1;
+
+    let html = '';
+    let remainingWidth = visibleWidth;
+    segments.forEach((segment, index) => {
+        if (segment.width > 0 && segment.type) {
+            let scaledWidth = (segment.width / totalSegmentPercentage) * visibleWidth;
+            if (index === segments.length - 1) {
+                scaledWidth = remainingWidth;
+            }
+            const barColor = segment.type === 'raw' ? '#E0F7FA' : componentColors[segment.type] || '#E0F7FA';
+            const textColor = getTextColor(barColor);
+            const displayType = segment.type === 'raw' ? 'Raw' : segment.type.charAt(0).toUpperCase() + segment.type.slice(1).replace('-', ' ');
+            const segmentProgress = (segment.qty / totalQty) * 100;
+            
+            // Debug logging for copper ore and copper HTML generation
+            if (materialKey === 'copper ore' || materialKey === 'copper') {
+                console.log(`  Segment ${index}:`, {
+                    type: segment.type,
+                    qty: segment.qty,
+                    width: segment.width,
+                    scaledWidth: scaledWidth,
+                    displayType: displayType,
+                    barColor: barColor
+                });
+            }
+            
+            const showTextInsideBar = materialGroup !== 'compound material';
+            html += `
+                <div class="progress-bar progress-bar-${segment.type}" role="progressbar"
+                     style="width: ${scaledWidth}%; color: ${textColor};"
+                     aria-valuenow="${segment.qty}" aria-valuemin="0" aria-valuemax="${totalQty}"
+                     title="${displayType}: ${formatNumber(segment.qty)}">
+                    ${showTextInsideBar ? displayType : ''}
+                </div>
+            `;
+            remainingWidth -= scaledWidth;
+            if (remainingWidth < 0) remainingWidth = 0;
+        }
+    });
+
+    
+    return html;
+}
+
+// Blockchain functionality removed for security
+// This app now works with CSV data only
+
+        // End of main script
+        
+    </script>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

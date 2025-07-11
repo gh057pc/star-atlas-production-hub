@@ -1,0 +1,40 @@
+ResourceReferral Links to Marketplace	Atlas MarketBuy Order	Atlas MarketSell Order	Group	Type	Cargo Size	Hardness	Crafting Fee% of Sell Tooltip	Crafting Duration [sec]Seconds * 1 Unit / 1 Crew	LP/XPPer Unit
+Arco	0.002250	0.002500	raw material	resource	1	400	—	—	—
+Biomass	0.000572	0.000700	raw material	resource	1	100	—	—	—
+Carbon	0.000552	0.000575	raw material	resource	1	100	—	—	—
+Copper Ore	0.000900	0.001000	raw material	resource	1	200	—	—	—
+Diamond	0.002150	0.002500	raw material	resource	1	400	—	—	—
+Hydrogen	0.000261	0.000276	raw material	resource	1	100	—	—	—
+Iron Ore	0.000835	0.000941	raw material	resource	1	200	—	—	—
+Lumanite	0.000900	0.001209	raw material	resource	1	250	—	—	—
+Nitrogen	0.000750	0.001000	raw material	resource	1	100	—	—	—
+Rochinol	0.002200	0.002475	raw material	resource	1	400	—	—	—
+Silica	0.001250	0.001350	raw material	resource	1	200	—	—	—
+Titanium Ore	0.001620	0.001750	raw material	resource	1	500	—	—	—
+Survey Data Unit	0.091589	0.104990	data	resource	1	—	—	—	1100
+Ammunition	0.001410	0.001564	consumable	resource	1	—	0.000100	1	—
+Food	0.001060	0.001140	consumable	resource	1	—	0.000096	1	6
+Fuel	0.001044	0.001100	consumable	resource	1	—	0.000091	1	—
+Golden Ticket 2624	0.000000	0.000000	consumable	resource	1	—	—	10	37050
+Toolkit	0.001476	0.001642	consumable	resource	1	—	0.000109	4/2/1	14
+Aerogel	0.005610	0.007071	compound material	resource	1	—	0.000438	2	—
+Copper	0.000829	0.001050	compound material	resource	1	—	0.000065	1	—
+Copper Wire	0.001289	0.001620	compound material	resource	1	—	0.000086	4	—
+Crystal Lattice	0.006660	0.008000	compound material	resource	5	—	0.000539	2	—
+Electronics	0.003730	0.003888	compound material	resource	2	—	0.000207	14	76
+Graphene	0.002750	0.004000	compound material	resource	2	—	0.000157	2	—
+Hydrocarbon	0.001841	0.002100	compound material	resource	2	—	0.000135	2	—
+Iron	0.000970	0.001386	compound material	resource	1	—	0.000085	1	—
+Magnet	0.001500	0.001898	compound material	resource	1	—	0.000128	4	—
+Polymer	0.002000	0.002600	compound material	resource	1	—	0.000087	4	—
+Steel	0.002750	0.003497	compound material	resource	1	—	0.000202	4	—
+Titanium	0.001600	0.001949	compound material	resource	1	—	0.000126	1	—
+Electromagnet	0.006400	0.007945	component	resource	4	—	0.000380	16	135
+Energy Substrate	0.006510	0.008000	component	resource	4	—	0.000328	6	—
+Field Stabilizer	0.014778	0.018897	component	resource	6	—	0.001115	24	255
+Framework	0.002400	0.002765	component	resource	1	—	0.000152	18/12/6	48
+Particle Accelerator	0.028500	0.031279	component	resource	6	—	0.002100	96	480
+Power Source	0.006500	0.006967	component	resource	2	—	0.000400	15	108
+Radiation Absorber	0.016530	0.019100	component	resource	6	—	0.001321	48	324
+Strange Emitter	0.011500	0.013500	component	resource	5	—	0.000258	6	—
+Super Conductor	0.012778	0.013481	component	resource	5	—	0.000904	8	—
