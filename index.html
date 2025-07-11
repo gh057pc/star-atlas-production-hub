@@ -2042,9 +2042,17 @@ function generateProgressBar(materialKey, availableQty, requiredQty, visibleWidt
         const textColor = getTextColor(barColor);
         const showTextInsideBar = materialGroup !== 'compound material';
         
-        // Determine progress bar class based on material group
+        // Determine progress bar class and style based on material group
         let progressBarClass = 'progress-bar';
-        if (materialGroup === 'component') {
+        let customStyle = '';
+        
+        if (materialGroup === 'raw material') {
+            // Use material-specific color for raw materials
+            const materialColor = componentColors[materialKey] || '#ff6b35';
+            // Create a darker version of the color for gradient
+            const darkerColor = materialColor + '99'; // Add some transparency/darkness
+            customStyle = `background: linear-gradient(145deg, ${materialColor}, ${materialColor}CC) !important; box-shadow: 0 0 8px ${materialColor}66 !important;`;
+        } else if (materialGroup === 'component') {
             progressBarClass += ' progress-bar-component';
         } else if (materialGroup === 'data') {
             progressBarClass += ' progress-bar-data';
@@ -2052,7 +2060,7 @@ function generateProgressBar(materialKey, availableQty, requiredQty, visibleWidt
         
         return `
             <div class="${progressBarClass} progress-bar-${materialKey.replace(/\s+/g, '-')}" role="progressbar"
-                 style="width: ${visibleWidth}%; color: ${textColor};"
+                 style="width: ${visibleWidth}%; color: ${textColor}; ${customStyle}"
                  aria-valuenow="${availableQty}" aria-valuemin="0" aria-valuemax="${requiredQty}">
                 ${showTextInsideBar ? progress.toFixed(2) + '%' : ''}
             </div>
@@ -2097,7 +2105,19 @@ if (totalSegmentPercentage === 0) totalSegmentPercentage = 1;
             if (index === segments.length - 1) {
                 scaledWidth = remainingWidth;
             }
-            const barColor = segment.type === 'raw' ? '#E0F7FA' : componentColors[segment.type] || '#E0F7FA';
+            // Use material-specific color for raw material segments, otherwise use default colors
+            let barColor;
+            let customStyle = '';
+            
+            if (segment.type === 'raw' && materialGroup === 'raw material') {
+                // For raw material progress bars, use the material's specific color
+                barColor = componentColors[materialKey] || '#E0F7FA';
+                customStyle = `background: linear-gradient(145deg, ${barColor}, ${barColor}CC) !important; box-shadow: 0 0 8px ${barColor}66 !important;`;
+            } else {
+                // For segments representing other components, use their colors or default
+                barColor = segment.type === 'raw' ? '#E0F7FA' : componentColors[segment.type] || '#E0F7FA';
+            }
+            
             const textColor = getTextColor(barColor);
             const displayType = segment.type === 'raw' ? 'Raw' : segment.type.charAt(0).toUpperCase() + segment.type.slice(1).replace('-', ' ');
             const segmentProgress = (segment.qty / totalQty) * 100;
@@ -2126,7 +2146,7 @@ if (totalSegmentPercentage === 0) totalSegmentPercentage = 1;
             
             html += `
                 <div class="${progressBarClass} progress-bar-${segment.type}" role="progressbar"
-                     style="width: ${scaledWidth}%; color: ${textColor};"
+                     style="width: ${scaledWidth}%; color: ${textColor}; ${customStyle}"
                      aria-valuenow="${segment.qty}" aria-valuemin="0" aria-valuemax="${totalQty}"
                      title="${displayType}: ${formatNumber(segment.qty)}">
                     ${showTextInsideBar ? displayType : ''}
