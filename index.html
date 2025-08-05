@@ -1394,6 +1394,68 @@ function adjustRawMaterialQuantities(selectedRecipeMaterials = []) {
             });
         }
 
+        function adjustCompoundMaterialQuantities() {
+            console.log('🚀 adjustCompoundMaterialQuantities() called');
+            const compoundAdjustments = {};
+            const allCompoundMaterials = Object.keys(resourceGroupMapping).filter(key => 
+                resourceGroupMapping[key] === 'compound material'
+            );
+
+            allCompoundMaterials.forEach(material => {
+                compoundAdjustments[material] = { total: 0, contributions: {} };
+                Object.keys(componentRecipes).forEach(component => {
+                    compoundAdjustments[material].contributions[component] = 0;
+                });
+            });
+
+            function calculateCompoundMaterialUsage(component, quantity, contributionPath = [], topLevelComponent = null) {
+                const recipe = componentRecipes[component.toLowerCase()];
+                if (!recipe) return;
+
+                if (contributionPath.includes(component.toLowerCase())) return;
+
+                const newPath = [...contributionPath, component.toLowerCase()];
+                const actualTopComponent = topLevelComponent || component.toLowerCase();
+
+                Object.entries(recipe).forEach(([material, amount]) => {
+                    const totalMaterialUsed = quantity * amount;
+
+                    if (getResourceGroup(material) === 'compound material') {
+                        compoundAdjustments[material.toLowerCase()].total += totalMaterialUsed;
+                        compoundAdjustments[material.toLowerCase()].contributions[actualTopComponent] =
+                            (compoundAdjustments[material.toLowerCase()].contributions[actualTopComponent] || 0) + totalMaterialUsed;
+                        console.log(`🔍 Compound material contribution: ${material} += ${totalMaterialUsed} from ${actualTopComponent} (via ${component})`);
+                    } else if (componentRecipes[material.toLowerCase()]) {
+                        calculateCompoundMaterialUsage(material, totalMaterialUsed, newPath, actualTopComponent);
+                    }
+                });
+            }
+
+            Object.entries(inventory).forEach(([item, data]) => {
+                const component = item.toLowerCase();
+                if (componentRecipes[component]) {
+                    calculateCompoundMaterialUsage(component, data.quantity, [], component);
+                }
+            });
+
+            allCompoundMaterials.forEach(material => {
+                const materialKey = material.toLowerCase();
+                if (compoundAdjustments[materialKey]) {
+                    if (inventory[materialKey]) {
+                        inventory[materialKey].quantity += compoundAdjustments[materialKey].total;
+                        inventory[materialKey].contributions = compoundAdjustments[materialKey].contributions || {};
+                    } else if (compoundAdjustments[materialKey].total > 0) {
+                        inventory[materialKey] = {
+                            quantity: compoundAdjustments[materialKey].total,
+                            usdcValue: 0,
+                            locations: {},
+                            contributions: compoundAdjustments[materialKey].contributions || {}
+                        };
+                    }
+                }
+            });
+        }
+
       function adjustIntermediateComponentQuantities(recipe) {
     // DISABLED: This function was causing double-counting of contributions
     // The adjustRawMaterialQuantities() function already handles all contribution tracking
@@ -1544,6 +1606,7 @@ function parseCsvData(data, isFile = false) {
             });
 
 adjustRawMaterialQuantities();
+            adjustCompoundMaterialQuantities();
             adjustIntermediateComponentQuantities({});
 
             if (Object.keys(inventory).length === 0) {
@@ -1913,6 +1976,7 @@ adjustRawMaterialQuantities();
                 const relevantMaterials = getAllRecipeMaterials(recipe);
                 // Only adjust quantities for relevant materials
                 adjustRawMaterialQuantities(relevantMaterials);
+                adjustCompoundMaterialQuantities();
 
                 const progressContainer = document.getElementById('progressContainer');
                 progressContainer.innerHTML = ''; // Clear existing content
@@ -2090,18 +2154,22 @@ function generateProgressBar(materialKey, availableQty, requiredQty, visibleWidt
     const materialGroup = getResourceGroup(materialKey);
     
     const isRawMaterial = materialGroup === 'raw material';
+    const isCompoundMaterial = materialGroup === 'compound material';
     const isIntermediate = intermediateComponents.includes(materialKey.toLowerCase());
     const isMineableMaterial = isRawMaterial; // Raw materials are mineable
+    const shouldShowSegmentedBar = isMineableMaterial || isIntermediate || isCompoundMaterial;
     
     if (materialKey === 'copper ore' || materialKey === 'copper') {
         console.log(`🔍 ${materialKey} path analysis:`);
         console.log('  Is mineable material?', isMineableMaterial);
         console.log('  Is raw material?', isRawMaterial);
+        console.log('  Is compound material?', isCompoundMaterial);
         console.log('  Is intermediate?', isIntermediate);
+        console.log('  Should show segmented bar?', shouldShowSegmentedBar);
         console.log('  Material key:', materialKey);
     }
     
-    if (!isMineableMaterial && !isIntermediate) {
+    if (!shouldShowSegmentedBar) {
         if (materialKey === 'copper ore') {
             console.log('🚪 Taking simple progress bar path for copper ore');
         }
@@ -2288,7 +2356,7 @@ if (totalSegmentPercentage === 0) totalSegmentPercentage = 1;
                 });
             }
             
-            const showTextInsideBar = materialGroup !== 'compound material';
+            const showTextInsideBar = true; // Show text for all material groups
             
             // Determine progress bar class based on material group
             let progressBarClass = 'progress-bar';
