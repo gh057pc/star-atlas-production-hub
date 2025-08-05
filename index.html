@@ -1433,7 +1433,8 @@ function adjustRawMaterialQuantities(selectedRecipeMaterials = []) {
 
             Object.entries(inventory).forEach(([item, data]) => {
                 const component = item.toLowerCase();
-const resourceGroup = getResourceGroup(component);\n                if (componentRecipes[component] && (resourceGroup === 'component' || resourceGroup === 'compound material')) {
+                const resourceGroup = getResourceGroup(component);
+                if (componentRecipes[component] && (resourceGroup === 'component' || resourceGroup === 'compound material')) {
                     calculateCompoundMaterialUsage(component, data.quantity, [], component);
                 }
             });
