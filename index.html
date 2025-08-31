@@ -975,9 +975,9 @@ let MAX_CONTRACT_VALUE = 500000;
                 "Hydrogen": 312,
                 "Titanium Ore": 468,
                 "Titanium": 468,
-                "Graphene": 78,
                 "Hydrocarbon": 156,
-                "Polymer": 156
+                "Polymer": 156,
+                "Graphene": 78,
             },
             mud_contract_starpath_cells: {
                 "Carbon": 1227,
@@ -1580,20 +1580,48 @@ function parseCsvData(data, isFile = false) {
                 return;
             }
 
-            const requiredHeaders = ["Item", "Total Units", "USDC Value"];
+            // Define base required headers and their alternatives
+            const requiredHeadersMap = {
+                "Item": ["Item"],
+                "Total Units": ["Total Units", "Total Units."],
+                "USDC Value": ["USDC Value"]
+            };
+            
             const headers = results.meta.fields;
-            const missingHeaders = requiredHeaders.filter(h => !headers.includes(h));
+            const missingHeaders = [];
+            
+            // Check if at least one of the alternatives for each required header is present
+            Object.entries(requiredHeadersMap).forEach(([key, alternatives]) => {
+                if (!alternatives.some(alt => headers.includes(alt))) {
+                    missingHeaders.push(key);
+                }
+            });
             if (missingHeaders.length > 0) {
                 document.getElementById('csvStatus').innerHTML = `<p style="color: #ff5555;">Error: Missing required columns: ${missingHeaders.join(", ")}.</p>`;
                 return;
             }
 
+            // Find the actual column name for Total Units
+            let totalUnitsColumn = null;
+            const totalUnitsAlternatives = ["Total Units", "Total Units."];
+            for (const alt of totalUnitsAlternatives) {
+                if (headers.includes(alt)) {
+                    totalUnitsColumn = alt;
+                    break;
+                }
+            }
+            
+            if (!totalUnitsColumn) {
+                document.getElementById('csvStatus').innerHTML = `<p style="color: #ff5555;">Error: Could not find Total Units column. Available columns: ${headers.join(', ')}</p>`;
+                return;
+            }
+            
             inventory = {};
             rawInventory = {};
             
             results.data.forEach(row => {
-                if (row.Item && row["Total Units"] && row["USDC Value"] !== undefined) {
-                    const quantity = parseInt(row["Total Units"].replace(/,/g, '')) || 0;
+                if (row.Item && row[totalUnitsColumn] && row["USDC Value"] !== undefined) {
+                    const quantity = parseInt(row[totalUnitsColumn].replace(/,/g, '')) || 0;
                     const usdcValue = parseFloat(row["USDC Value"]) || 0;
                     const locations = {};
                     locationColumns.forEach(location => {
