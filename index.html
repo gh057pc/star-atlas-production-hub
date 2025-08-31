@@ -890,7 +890,7 @@ let MAX_CONTRACT_VALUE = 500000;
 
         const locationColumns = [
             "MRZ-1", "MRZ-10", "MRZ-11", "MRZ-12", "MRZ-2", "MRZ-3", "MRZ-4", "MRZ-5", "MRZ-6",
-            "MRZ-7", "MRZ-8", "MRZ-9", "MUD Central Station", "MUD-2", "MUD-4", "MUD-5"
+            "MRZ-7", "MRZ-8", "MRZ-9", "MUD Central Station", "MUD-2", "MUD-3", "MUD-4", "MUD-5"
         ];
 
         const componentRecipes = {
@@ -1292,16 +1292,25 @@ let MAX_CONTRACT_VALUE = 500000;
             if (headerIndex === -1) return null;
 
             let csvLines = lines.slice(headerIndex);
+            
+            // Filter out summary/total lines but be more specific
             csvLines = csvLines.filter(line => {
+                const trimmedLine = line.trim();
+                if (!trimmedLine) return false; // Remove empty lines
                 const firstField = line.split('\t')[0];
-                return firstField && !firstField.includes("Total CargoTotal USDC Value");
+                // Only filter out lines that are clearly summary rows
+                return firstField && 
+                       !firstField.includes("Total Cargo") && 
+                       !trimmedLine.startsWith("Total USDC Value") &&
+                       !trimmedLine.match(/^Total\s*[,\s]*\d/);
             });
 
-            const expectedFieldCount = 19;
-            csvLines = csvLines.map((line, index) => {
-                let fields = line.split('\t').map(field => field.trim()).filter(field => field !== "");
-                while (fields.length < expectedFieldCount) fields.push("");
-                if (fields.length > expectedFieldCount) fields = fields.slice(0, expectedFieldCount);
+            // Don't force field count - let Papa Parse handle field parsing
+            // Just clean up the lines without removing fields
+            csvLines = csvLines.map(line => {
+                // Split by tab and trim each field, but don't filter out empty fields
+                // Empty fields are important for maintaining column alignment
+                let fields = line.split('\t').map(field => field.trim());
                 return fields.join('\t');
             });
 
@@ -1567,6 +1576,12 @@ function parseCsvData(data, isFile = false) {
         },
         skipEmptyLines: 'greedy',
         complete: function(results) {
+            // Debug: Log all detected headers and first few rows
+            console.log('🔍 CSV Debug Info:');
+            console.log('  Headers detected:', results.meta.fields);
+            console.log('  First 3 rows:', results.data.slice(0, 3));
+            console.log('  All errors:', results.errors);
+            
             // Filter out only critical errors, ignore quote warnings
             const criticalErrors = results.errors.filter(error => 
                 error.type === 'Delimiter' || 
@@ -1588,11 +1603,14 @@ function parseCsvData(data, isFile = false) {
             };
             
             const headers = results.meta.fields;
+            console.log('🔍 Checking for required headers in:', headers);
             const missingHeaders = [];
             
             // Check if at least one of the alternatives for each required header is present
             Object.entries(requiredHeadersMap).forEach(([key, alternatives]) => {
-                if (!alternatives.some(alt => headers.includes(alt))) {
+                const found = alternatives.some(alt => headers.includes(alt));
+                console.log(`  ${key}: ${found ? '✅' : '❌'} (looking for: ${alternatives.join(', ')})`);
+                if (!found) {
                     missingHeaders.push(key);
                 }
             });
