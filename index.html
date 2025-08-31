@@ -574,9 +574,16 @@
         .progress-bar-carbon {
             background-color: #93C572; /* Carbon - Pistachio Green */
         }
+        .progress-bar-steel {
+            background-color: #8B9DC3; /* Steel - Steel Blue */
+        }
         .text-graphene {
             color: #D3D3D3;
             text-shadow: 0 0 5px #D3D3D3;
+        }
+        .text-steel {
+            color: #8B9DC3;
+            text-shadow: 0 0 5px #8B9DC3;
         }
         .text-crystal-lattice {
             color: #0066CC;
@@ -857,11 +864,11 @@ let MAX_CONTRACT_VALUE = 500000;
             'crystal lattice': 'compound material',
             'electronics': 'compound material',
             'graphene': 'compound material',
+            'steel': 'compound material',
             'hydrocarbon': 'compound material',
             'iron': 'compound material',
             'magnet': 'compound material',
             'polymer': 'compound material',
-            'steel': 'compound material',
             'titanium': 'compound material',
             
             // Components
@@ -895,6 +902,7 @@ let MAX_CONTRACT_VALUE = 500000;
 
         const componentRecipes = {
             "graphene": { "carbon": 5 },
+            "steel": {"carbon": 2, "iron": 1 },
             "crystal lattice": { "diamond": 2, "hydrogen": 7 },
             "hydrocarbon": { "carbon": 2, "hydrogen": 2 },
             "polymer": { "hydrocarbon": 1 },
@@ -947,6 +955,7 @@ let MAX_CONTRACT_VALUE = 500000;
             "particle accelerator": "#FF1493",
             "super conductor": "#20B2AA",
             "strange emitter": "#BA55D3",
+            "steel": "#8B9DC3",
             "hydrogen": "#7FDBFF",
             "carbon": "#93C572",
             "diamond": "#B0E0E6",
@@ -967,17 +976,30 @@ let MAX_CONTRACT_VALUE = 500000;
                 "Hydrocarbon": 174,
                 "Polymer": 174
             },
-            mud_contract_default: {
-                "Energy Substrate": 57,
-                "Framework": 91,
+            mud_contract_fw1: {
+                "Energy Substrate": 78,
+                "Framework": 234,
                 "Survey Data Unit": 5,
                 "Carbon": 702,
                 "Hydrogen": 312,
-                "Titanium Ore": 468,
-                "Titanium": 468,
+                "Iron Ore": 468,
+                "Iron": 468,
+                "Hydrocarbon": 156,
+                "Polymer": 156,
+                "Graphene": 78
+            },
+            mud_contract_fw2_: {
+                "Energy Substrate": 78,
+                "Framework": 234,
+                "Survey Data Unit": 5,
+                "Carbon": 1170,
+                "Hydrogen": 312,
+                "Iron Ore": 234,
+                "Iron": 234,
                 "Hydrocarbon": 156,
                 "Polymer": 156,
                 "Graphene": 78,
+                "Steel": 234
             },
             mud_contract_starpath_cells: {
                 "Carbon": 1227,
@@ -1478,6 +1500,7 @@ function adjustRawMaterialQuantities(selectedRecipeMaterials = []) {
     
     const intermediateAdjustments = {
         "graphene": { total: 0, contributions: {} },
+        "steel": { total: 0, contributions: {} },
         "polymer": { total: 0, contributions: {} },
         "copper wire": { total: 0, contributions: {} },
         "magnet": { total: 0, contributions: {} },
@@ -2195,7 +2218,7 @@ const progressBarHTML = generateProgressBar(materialKey, availableQty, requiredQ
 function generateProgressBar(materialKey, availableQty, requiredQty, visibleWidth, relevantMaterials = []) {
     
     const intermediateComponents = [
-        "graphene", "polymer", "copper wire", "magnet", "super conductor", 
+        "graphene", "steel", "polymer", "copper wire", "magnet", "super conductor", 
         "strange emitter", "crystal lattice", "energy substrate"
     ];
 
@@ -2347,6 +2370,7 @@ if (totalSegmentPercentage === 0) totalSegmentPercentage = 1;
                     'electromagnet': 'EM',
                     'crystal lattice': 'CL',
                     'graphene': 'GR',
+                    'steel': 'ST',
                     'superconductor': 'SC',
                     'framework': 'FW',
                     'hydrocarbon': 'HC',
