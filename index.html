@@ -262,10 +262,8 @@
             height: 1px;
             background: linear-gradient(90deg, transparent, #ff6b35, transparent);
         }
-        .progress-container, .locations-container {
-            margin-top: 30px;
-        }
         .progress-container {
+            margin-top: 30px;
             background: linear-gradient(145deg, #252525, #1a1a1a);
             border: 1px solid #333;
             border-radius: 8px;
@@ -290,6 +288,11 @@
             animation: fadeIn 0.5s ease-in;
             height: 19px; /* Reduced by 20% from 24px */
             overflow: hidden;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        .progress[onclick]:hover {
+            border-color: #00e5ff;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3), 0 0 8px rgba(0, 229, 255, 0.4);
         }
         .progress-bar {
             background: linear-gradient(145deg, #ff6b35, #f7931e);
@@ -323,44 +326,6 @@
             border-radius: 6px;
             background: linear-gradient(145deg, #2a2a2a, #1e1e1e);
             border: 1px solid #333;
-        }
-        .locations-container {
-            background: linear-gradient(145deg, #252525, #1a1a1a);
-            border: 1px solid #333;
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
-            position: relative;
-        }
-        .locations-container::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, #ff6b35, transparent);
-        }
-        .location-group {
-            margin-bottom: 20px;
-            padding: 15px;
-            background: linear-gradient(145deg, #2a2a2a, #1e1e1e);
-            border: 1px solid #444;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-            transition: all 0.3s ease;
-        }
-        .location-group:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
-        }
-        .location-group h4 {
-            font-size: 1.1rem;
-            margin-bottom: 15px;
-            color: #ff6b35;
-        }
-        .location-group h4:before {
-            content: '🏭 ';
         }
         .material-bar {
             margin-bottom: 10px;
@@ -821,9 +786,6 @@
 
         <!-- Crafting Progress Sliders -->
         <div id="progressContainer" class="progress-container"></div>
-
-        <!-- Material Locations Section -->
-        <div id="locationsContainer" class="locations-container"></div>
     </div>
 
     <script>
@@ -833,6 +795,80 @@ let selectedFile = null;
 let storedCsvData = null; // Store the last successfully parsed CSV data
 const MAX_RESOURCE_VALUE = 10000000;
 let MAX_CONTRACT_VALUE = 500000;
+let recipeHistory = []; // Stack to track recipe navigation history
+
+// Navigate to a component recipe (called when clicking on a progress bar)
+function navigateToRecipe(componentKey, requiredQty) {
+    // Find the recipe key that matches this component
+    const recipeKey = Object.keys(recipes).find(key => {
+        const normalizedKey = key.replace(/_/g, ' ').toLowerCase();
+        return normalizedKey === componentKey.toLowerCase() ||
+               key.toLowerCase() === componentKey.toLowerCase();
+    });
+
+    if (!recipeKey) {
+        console.log(`No recipe found for ${componentKey}`);
+        return;
+    }
+
+    // Save current state to history
+    const currentRecipe = document.getElementById('recipeSelect').value;
+    const currentQty = document.getElementById('quantity').value;
+
+    recipeHistory.push({
+        recipe: currentRecipe,
+        quantity: currentQty
+    });
+
+    // Update the form fields
+    document.getElementById('recipeSelect').value = recipeKey;
+    document.getElementById('quantity').value = Math.ceil(requiredQty);
+
+    // Regenerate the progress bars
+    handleGenerateSliders({ preventDefault: () => {} }, false);
+
+    // Update back button visibility
+    updateBackButton();
+
+    // Save selections
+    saveUserSelections();
+}
+
+// Go back to previous recipe
+function goBackRecipe() {
+    if (recipeHistory.length === 0) return;
+
+    const previous = recipeHistory.pop();
+
+    // Restore the previous state
+    document.getElementById('recipeSelect').value = previous.recipe;
+    document.getElementById('quantity').value = previous.quantity;
+
+    // Regenerate the progress bars
+    handleGenerateSliders({ preventDefault: () => {} }, false);
+
+    // Update back button visibility
+    updateBackButton();
+
+    // Save selections
+    saveUserSelections();
+}
+
+// Update back button visibility
+function updateBackButton() {
+    const backBtn = document.getElementById('recipeBackBtn');
+    if (backBtn) {
+        if (recipeHistory.length > 0) {
+            const previousRecipe = recipeHistory[recipeHistory.length - 1].recipe
+                .replace(/_/g, ' ')
+                .replace(/\b\w/g, char => char.toUpperCase());
+            backBtn.style.display = 'inline-block';
+            backBtn.innerHTML = `← Back to ${previousRecipe}`;
+        } else {
+            backBtn.style.display = 'none';
+        }
+    }
+}
 
         // Hardcoded resource group mapping based on Star Atlas SAGE data
         const resourceGroupMapping = {
@@ -1373,16 +1409,21 @@ let MAX_CONTRACT_VALUE = 500000;
         document.addEventListener('DOMContentLoaded', () => {
             populateRecipeDropdown();
             populateCraftingLocationDropdown();
-            
+
             // Load saved selections after populating dropdowns
             setTimeout(() => {
                 loadUserSelections();
             }, 100);
-            
+
             // Add event listeners to save selections when they change
             document.getElementById('recipeSelect').addEventListener('change', saveUserSelections);
             document.getElementById('quantity').addEventListener('input', saveUserSelections);
             document.getElementById('craftingLocation').addEventListener('change', saveUserSelections);
+
+            // Clear recipe history when user manually changes recipe (not via navigation)
+            document.getElementById('recipeSelect').addEventListener('change', function() {
+                recipeHistory = [];
+            });
         });
 
         function formatNumber(num) {
@@ -1888,8 +1929,6 @@ adjustRawMaterialQuantities();
             }, 250); // Increased delay to ensure paste completes
         });
 
-
-// CSV only mode: Blockchain elements removed for security and simplicity.
         const updateCSVStatus = (message, color = '#00e5ff') => {
             document.getElementById('csvStatus').innerHTML = `<p style="color: ${color};">${message}</p>`;
         };
@@ -1948,28 +1987,16 @@ adjustRawMaterialQuantities();
                     const contractData = inventory[contract.key] || { quantity: 0, usdcValue: 0 };
                     const contractCount = contractData.quantity;
                     const totalValue = contractData.usdcValue;
-
-                    const progress = (contractCount / MAX_CONTRACT_VALUE) * 100;
-                    const displayWidth = Math.min(progress, 100);
-                    const barColor = componentColors[contract.key];
-                    const textColor = getTextColor(barColor);
                     const usdcColor = totalValue > 0 ? '#00ff00' : '#e0f7fa';
 
-                    const contractBar = document.createElement('div');
-                    contractBar.className = 'mb-3';
-                    // Safe key handling for CSS class names
-                    const safeKey = (contract.key || '').replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '');
-                    contractBar.innerHTML = `
-                        <label>${contract.name}: ${formatNumber(contractCount)}/${formatNumber(MAX_CONTRACT_VALUE)} ${createPriceTag(totalValue, usdcColor)}</label>
-                        <div class="progress">
-                            <div class="progress-bar progress-bar-${safeKey}" role="progressbar"
-                                 style="width: ${displayWidth}%; color: ${textColor};"
-                                 title="${contract.name}: ${formatNumber(contractCount)} ($${totalValue.toFixed(2)} USD)"
-                                 aria-valuenow="${contractCount}" aria-valuemin="0" aria-valuemax="${MAX_CONTRACT_VALUE}">
-                            </div>
-                        </div>
+                    const contractItem = document.createElement('div');
+                    contractItem.className = 'mb-2';
+                    contractItem.innerHTML = `
+                        <span style="color: #e0f7fa;">${contract.name}:</span>
+                        <span style="color: #ff6b35; font-weight: bold;">${formatNumber(contractCount)}</span>
+                        ${createPriceTag(totalValue, usdcColor)}
                     `;
-                    contractsContainer.appendChild(contractBar);
+                    contractsContainer.appendChild(contractItem);
                 });
             } catch (error) {
                 document.getElementById('contractsContainer').innerHTML = `<h3>Contracts</h3><p style="color: #ff5555;">Error loading contracts: ${error.message}</p>`;
@@ -2000,120 +2027,6 @@ adjustRawMaterialQuantities();
                 e.target.closest('.material-row').remove();
             }
         });
-
-        function updateLocationsSection(recipe, componentName) {
-            try {
-                const locationsContainer = document.getElementById('locationsContainer');
-                locationsContainer.innerHTML = `<h3>Galactic Hubs: Material Locations for ${componentName}</h3>`;
-
-                if (!recipe || Object.keys(recipe).length === 0) {
-                    locationsContainer.innerHTML += `<p style="color: #ff5555;">No materials in recipe.</p>`;
-                    return;
-                }
-
-                const materials = getAllRecipeMaterials(recipe);
-                if (materials.length === 0) {
-                    locationsContainer.innerHTML += `<p style="color: #ff5555;">No materials to display.</p>`;
-                    return;
-                }
-
-                const locationMap = {};
-                locationColumns.forEach(location => {
-                    locationMap[location] = [];
-                });
-
-                materials.forEach(materialKey => {
-                    const materialData = rawInventory[materialKey] || { quantity: 0, locations: {} };
-                    const locations = materialData.locations || {};
-                    Object.entries(locations).forEach(([location, quantity]) => {
-                        if (locationMap[location] && quantity > 0) {
-                            locationMap[location].push({ material: materialKey, quantity });
-                        }
-                    });
-                });
-
-                let globalMaxQuantity = 0;
-                Object.values(locationMap).forEach(materialList => {
-                    if (materialList.length > 0) {
-                        const maxAtLocation = Math.max(...materialList.map(item => item.quantity));
-                        if (maxAtLocation > globalMaxQuantity) {
-                            globalMaxQuantity = maxAtLocation;
-                        }
-                    }
-                });
-                globalMaxQuantity = globalMaxQuantity || 1;
-
-                const locationTotals = {};
-                let maxLocationTotal = 0;
-                Object.entries(locationMap).forEach(([location, materialList]) => {
-                    const total = materialList.reduce((sum, { quantity }) => sum + quantity, 0);
-                    locationTotals[location] = total;
-                    if (total > maxLocationTotal) {
-                        maxLocationTotal = total;
-                    }
-                });
-                maxLocationTotal = maxLocationTotal || 1;
-
-                const sortedLocations = Object.entries(locationMap).sort((a, b) => locationTotals[b[0]] - locationTotals[a[0]]);
-
-                sortedLocations.forEach(([location, materialList]) => {
-                    if (materialList.length === 0) return;
-
-                    const locationDiv = document.createElement('div');
-                    locationDiv.className = 'location-group';
-                    locationDiv.innerHTML = `<h4>Station ${location}</h4>`;
-
-                    materialList.sort((a, b) => b.quantity - a.quantity);
-
-                    // Find the maximum quantity at this specific location
-                    const locationMaxQuantity = Math.max(...materialList.map(item => item.quantity));
-                    
-                    materialList.forEach(({ material, quantity }) => {
-                        const percentage = (quantity / locationMaxQuantity) * 100;
-                        const displayWidth = Math.min(percentage, 100);
-                        const visibleWidth = Math.max(displayWidth, quantity > 0 ? 0.1 : 0);
-                        const materialDisplay = material.charAt(0).toUpperCase() + material.slice(1);
-
-                        const materialDiv = document.createElement('div');
-                        materialDiv.className = 'material-bar';
-                        materialDiv.innerHTML = `
-                            <label class="text-${material.replace(/\s+/g, '-')}" >${materialDisplay}: ${formatNumber(quantity)}</label>
-                            <div class="progress">
-                                <div class="progress-bar progress-bar-${material.replace(/\s+/g, '-')}" role="progressbar" style="width: ${visibleWidth}%;"
-                                     title="${materialDisplay}: ${formatNumber(quantity)}"
-                                     aria-valuenow="${quantity}" aria-valuemin="0" aria-valuemax="${locationMaxQuantity}">
-                                </div>
-                            </div>
-                        `;
-                        locationDiv.appendChild(materialDiv);
-                    });
-
-                    const totalQuantity = locationTotals[location];
-                    const totalPercentage = (totalQuantity / maxLocationTotal) * 100;
-                    const totalDisplayWidth = Math.min(totalPercentage, 100);
-
-                    const totalDiv = document.createElement('div');
-                    totalDiv.className = 'total-bar mt-2';
-                    totalDiv.innerHTML = `
-                        <label>Total Materials: ${formatNumber(totalQuantity)}</label>
-                        <div class="progress">
-                            <div class="progress-bar" role="progressbar" style="width: ${totalDisplayWidth}%;"
-                                 aria-valuenow="${totalQuantity}" aria-valuemin="0" aria-valuemax="${maxLocationTotal}">
-                            </div>
-                        </div>
-                    `;
-                    locationDiv.appendChild(totalDiv);
-
-                    locationsContainer.appendChild(locationDiv);
-                });
-
-                if (sortedLocations.every(([, materialList]) => materialList.length === 0)) {
-                    locationsContainer.innerHTML += `<p style="color: #ff5555;">No materials found in any locations.</p>`;
-                }
-            } catch (error) {
-                document.getElementById('locationsContainer').innerHTML = `<h3>Galactic Hubs: Material Locations</h3><p style="color: #ff5555;">Error loading locations: ${error.message}</p>`;
-            }
-        }
 
         const submitButton = document.getElementById('submitRecipe');
         const csvFile = document.getElementById('csvFile');
@@ -2184,7 +2097,19 @@ adjustRawMaterialQuantities();
 
                 const progressContainer = document.getElementById('progressContainer');
                 progressContainer.innerHTML = ''; // Clear existing content
-                progressContainer.innerHTML = `<h3>Progress for ${componentName} (x${quantity})</h3>`;
+
+                // Add back button and header
+                const backBtnDisplay = recipeHistory.length > 0 ? 'inline-block' : 'none';
+                const backBtnText = recipeHistory.length > 0
+                    ? `← Back to ${recipeHistory[recipeHistory.length - 1].recipe.replace(/_/g, ' ').replace(/\b\w/g, char => char.toUpperCase())}`
+                    : '';
+                progressContainer.innerHTML = `
+                    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 10px;">
+                        <button id="recipeBackBtn" onclick="goBackRecipe()" class="btn btn-outline-secondary btn-sm" style="display: ${backBtnDisplay};">${backBtnText}</button>
+                        <h3 style="margin: 0;">Progress for ${componentName} (x${quantity})</h3>
+                    </div>
+                    <p style="color: #888; font-size: 0.85rem; margin-bottom: 15px;">💡 Click on any component with a recipe to drill down into its materials</p>
+                `;
 
                 const allMaterials = getAllRecipeMaterials(recipe);
                 const materials = Object.entries(recipe).filter(([material]) => allMaterials.includes(material.toLowerCase()));
@@ -2315,21 +2240,24 @@ adjustRawMaterialQuantities();
 
                     const progressBarDiv = document.createElement('div');
                     progressBarDiv.className = 'mb-3';
-                    
-                    // Debug: About to call generateProgressBar
-                    if (materialKey === 'copper ore') {
-                    }
-                    
+
 const progressBarHTML = generateProgressBar(materialKey, availableQty, requiredQty, visibleWidth, allMaterials);
-                    
-                    if (materialKey === 'copper ore') {
-                    }
-                    
+
                     const materialColor = componentColors[materialKey] || '#ff6b35';
-                    
+
+                    // Check if this material has a craftable recipe we can navigate to
+                    const recipeKeyForMaterial = Object.keys(recipes).find(key => {
+                        const normalizedKey = key.replace(/_/g, ' ').toLowerCase();
+                        return normalizedKey === materialKey.toLowerCase() || key.toLowerCase() === materialKey.toLowerCase();
+                    });
+                    const hasNavigableRecipe = !!recipeKeyForMaterial;
+                    const clickableStyle = hasNavigableRecipe ? 'cursor: pointer;' : '';
+                    const clickableIndicator = hasNavigableRecipe ? '<span style="color: #00e5ff; margin-left: 8px;" title="Click to drill down">▶</span>' : '';
+                    const clickHandler = hasNavigableRecipe ? `onclick="navigateToRecipe('${materialKey}', ${requiredQty})"` : '';
+
                     progressBarDiv.innerHTML = `
-                        <label style="color: white;"><span style="text-shadow: 0 0 8px ${materialColor}, 0 0 12px ${materialColor};">${material}</span> (<span style="color: #b0fafa;">${formatNumber(availableQty)}</span>/<span style="color: #66e0e0;">${formatNumber(requiredQty)}</span>${locationPercentageText}) ${createPriceTag(usdcValue, usdcColor)}</label>
-                        <div class="progress">
+                        <label style="color: white;"><span style="text-shadow: 0 0 8px ${materialColor}, 0 0 12px ${materialColor};">${material}</span> (<span style="color: #b0fafa;">${formatNumber(availableQty)}</span>/<span style="color: #66e0e0;">${formatNumber(requiredQty)}</span>${locationPercentageText}) ${createPriceTag(usdcValue, usdcColor)}${clickableIndicator}</label>
+                        <div class="progress" style="${clickableStyle}" ${clickHandler} ${hasNavigableRecipe ? `title="Click to view ${material} recipe"` : ''}>
                             ${progressBarHTML}
                         </div>
                     `;
@@ -2337,7 +2265,6 @@ const progressBarHTML = generateProgressBar(materialKey, availableQty, requiredQ
                 }
 
                 updateContractsSection();
-                updateLocationsSection(recipe, componentName);
                 if (shouldClearInput) {
                     document.getElementById('csvPaste').value = '';
                 }
@@ -2584,15 +2511,10 @@ if (totalSegmentPercentage === 0) totalSegmentPercentage = 1;
         }
     });
 
-    
+
     return html;
 }
 
-// Blockchain functionality removed for security
-// This app now works with CSV data only
-
-        // End of main script
-        
     </script>
 
     <!-- Bootstrap JS -->
