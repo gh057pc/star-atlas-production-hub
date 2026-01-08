@@ -824,6 +824,9 @@ function navigateToRecipe(componentKey, requiredQty) {
     document.getElementById('recipeSelect').value = recipeKey;
     document.getElementById('quantity').value = Math.ceil(requiredQty);
 
+    // Load the saved crafting location for this recipe
+    loadRecipeLocation(recipeKey);
+
     // Regenerate the progress bars
     handleGenerateSliders({ preventDefault: () => {} }, false);
 
@@ -843,6 +846,9 @@ function goBackRecipe() {
     // Restore the previous state
     document.getElementById('recipeSelect').value = previous.recipe;
     document.getElementById('quantity').value = previous.quantity;
+
+    // Load the saved crafting location for this recipe
+    loadRecipeLocation(previous.recipe);
 
     // Regenerate the progress bars
     handleGenerateSliders({ preventDefault: () => {} }, false);
@@ -1276,18 +1282,55 @@ function updateBackButton() {
             const recipeSelect = document.getElementById('recipeSelect');
             const quantity = document.getElementById('quantity');
             const craftingLocation = document.getElementById('craftingLocation');
-            
+
+            const currentRecipe = recipeSelect.value;
+
+            // Load existing per-recipe locations
+            let recipeLocations = {};
+            try {
+                const savedLocations = localStorage.getItem('sageProductionHub_recipeLocations');
+                if (savedLocations) {
+                    recipeLocations = JSON.parse(savedLocations);
+                }
+            } catch (e) {}
+
+            // Save current location for this recipe
+            if (currentRecipe) {
+                recipeLocations[currentRecipe] = craftingLocation.value;
+                localStorage.setItem('sageProductionHub_recipeLocations', JSON.stringify(recipeLocations));
+            }
+
             const selections = {
-                recipe: recipeSelect.value,
+                recipe: currentRecipe,
                 quantity: quantity.value,
                 location: craftingLocation.value
             };
-            
+
             localStorage.setItem('sageProductionHub_selections', JSON.stringify(selections));
             console.log('💾 Saved selections:', selections);
-            
+            console.log('💾 Saved recipe locations:', recipeLocations);
+
             // Show brief visual confirmation
             showSaveNotification();
+        }
+
+        // Load the saved crafting location for a specific recipe
+        function loadRecipeLocation(recipeKey) {
+            try {
+                const savedLocations = localStorage.getItem('sageProductionHub_recipeLocations');
+                if (savedLocations) {
+                    const recipeLocations = JSON.parse(savedLocations);
+                    if (recipeLocations[recipeKey]) {
+                        const craftingLocation = document.getElementById('craftingLocation');
+                        if (craftingLocation) {
+                            craftingLocation.value = recipeLocations[recipeKey];
+                            console.log(`📍 Loaded location for ${recipeKey}: ${recipeLocations[recipeKey]}`);
+                        }
+                    }
+                }
+            } catch (e) {
+                console.warn('Error loading recipe location:', e);
+            }
         }
         
         // Show a brief notification that selections were saved
@@ -1349,13 +1392,18 @@ function updateBackButton() {
                     if (selections.quantity && quantity) {
                         quantity.value = selections.quantity;
                     }
-                    
-                    // Restore crafting location
-                    const craftingLocation = document.getElementById('craftingLocation');
-                    if (selections.location && craftingLocation) {
-                        craftingLocation.value = selections.location;
+
+                    // Restore crafting location - use per-recipe location if available
+                    if (selections.recipe) {
+                        loadRecipeLocation(selections.recipe);
+                    } else {
+                        // Fallback to global location if no recipe-specific one exists
+                        const craftingLocation = document.getElementById('craftingLocation');
+                        if (selections.location && craftingLocation) {
+                            craftingLocation.value = selections.location;
+                        }
                     }
-                    
+
                     // Show notification that selections were restored
                     showRestoreNotification();
                     return selections;
@@ -1420,9 +1468,14 @@ function updateBackButton() {
             document.getElementById('quantity').addEventListener('input', saveUserSelections);
             document.getElementById('craftingLocation').addEventListener('change', saveUserSelections);
 
-            // Clear recipe history when user manually changes recipe (not via navigation)
+            // Clear recipe history and load saved location when user manually changes recipe
             document.getElementById('recipeSelect').addEventListener('change', function() {
                 recipeHistory = [];
+                // Load the saved crafting location for this recipe
+                const newRecipe = document.getElementById('recipeSelect').value;
+                if (newRecipe) {
+                    loadRecipeLocation(newRecipe);
+                }
             });
         });
 
