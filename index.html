@@ -906,21 +906,23 @@ let MAX_CONTRACT_VALUE = 500000;
             "crystal lattice": { "diamond": 2, "hydrogen": 7 },
             "hydrocarbon": { "carbon": 2, "hydrogen": 2 },
             "polymer": { "hydrocarbon": 1 },
-            "energy substrate": { "graphene": 1, "polymer": 2, "hydrocarbon": 2 },
+            "energy substrate": { "graphene": 1, "polymer": 2 },
             "titanium frame": { "titanium": 5, "silica": 10 },
             "titanium": { "titanium ore": 1 },
-            "radiation absorber": { "energy substrate": 1, "crystal lattice": 1 },
+            "radiation absorber": { "crystal lattice": 1, "energy substrate": 1 },
             "power source": { "graphene": 1, "lumanite": 2 },
             "electromagnet": { "copper wire": 4, "magnet": 1 },
             "copper wire": { "copper": 1 },
             "magnet": { "iron": 2 },
             "iron": { "iron ore": 1 },
-            "particle accelerator": { "super conductor": 1, "strange emitter": 1, "copper ore": 5 },
+            "particle accelerator": { "super conductor": 1, "strange emitter": 1 },
             "super conductor": { "copper wire": 5, "graphene": 2 },
-            "strange emitter": { "polymer": 2, "lumanite": 4, "copper ore": 3 },
+            "strange emitter": { "polymer": 2, "lumanite": 4 },
             "copper": { "copper ore": 1 },
             "aerogel": { "nitrogen": 4, "silica": 2 },
             "field stabilizer": { "aerogel": 1, "crystal lattice": 1 },
+            "electronics": { "copper": 1, "polymer": 1 },
+            "framework": { "iron": 2 },
         };
 
         const componentColors = {
@@ -961,7 +963,8 @@ let MAX_CONTRACT_VALUE = 500000;
             "diamond": "#B0E0E6",
             "nitrogen": "#87CEEB",
             "aerogel": "#E6E6FA",
-            "field stabilizer": "#40E0D0"
+            "field stabilizer": "#40E0D0",
+            "electronics": "#00CED1"
         };
 
         const recipes = {
@@ -1033,6 +1036,124 @@ let MAX_CONTRACT_VALUE = 500000;
                 "Electromagnet": 167,
                 "Particle Accelerator": 30,
                 "Survey Data Unit": 1
+            },
+            electromagnet: {
+                "Copper Ore": 4,
+                "Copper": 4,
+                "Copper Wire": 4,
+                "Iron Ore": 2,
+                "Iron": 2,
+                "Magnet": 1,
+                "Electromagnet": 1
+            },
+            electronics: {
+                "Copper Ore": 1,
+                "Carbon": 2,
+                "Hydrogen": 2,
+                "Copper": 1,
+                "Hydrocarbon": 1,
+                "Polymer": 1,
+                "Electronics": 1
+            },
+            field_stabilizer: {
+                "Diamond": 2,
+                "Hydrogen": 7,
+                "Nitrogen": 4,
+                "Silica": 2,
+                "Aerogel": 1,
+                "Crystal Lattice": 1,
+                "Field Stabilizer": 1
+            },
+            framework: {
+                "Iron Ore": 2,
+                "Iron": 2,
+                "Framework": 1
+            },
+            framework_2: {
+                "Carbon": 2,
+                "Iron Ore": 1,
+                "Iron": 1,
+                "Steel": 1,
+                "Framework": 1
+            },
+            framework_3: {
+                "Titanium Ore": 2,
+                "Titanium": 2,
+                "Framework": 1
+            },
+            particle_accelerator: {
+                "Carbon": 14,
+                "Hydrogen": 4,
+                "Copper Ore": 5,
+                "Lumanite": 4,
+                "Graphene": 2,
+                "Copper": 5,
+                "Copper Wire": 5,
+                "Hydrocarbon": 2,
+                "Polymer": 2,
+                "Super Conductor": 1,
+                "Strange Emitter": 1,
+                "Particle Accelerator": 1
+            },
+            power_source: {
+                "Carbon": 5,
+                "Lumanite": 2,
+                "Graphene": 1,
+                "Power Source": 1
+            },
+            radiation_absorber: {
+                "Carbon": 9,
+                "Diamond": 2,
+                "Hydrogen": 11,
+                "Graphene": 1,
+                "Hydrocarbon": 2,
+                "Polymer": 2,
+                "Crystal Lattice": 1,
+                "Energy Substrate": 1,
+                "Radiation Absorber": 1
+            },
+            steel: {
+                "Carbon": 2,
+                "Iron Ore": 1,
+                "Iron": 1,
+                "Steel": 1
+            },
+            fimbul_byos_butch: {
+                // Raws
+                "Carbon": 1675580669,
+                "Hydrogen": 907845687,
+                "Diamond": 187212526,
+                "Iron Ore": 809633760,
+                "Copper Ore": 500153227,
+                "Nitrogen": 222553940,
+                "Silica": 111276970,
+                "Lumanite": 318741490,
+                "Titanium Ore": 463352708,
+                // Compounds
+                "Graphene": 197338523,
+                "Copper": 500153227,
+                "Copper Wire": 499457684,
+                "Hydrocarbon": 126300923,
+                "Polymer": 126300923,
+                "Iron": 809633760,
+                "Magnet": 93820781,
+                "Crystal Lattice": 93606263,
+                "Aerogel": 55638485,
+                "Energy Substrate": 37967778,
+                "Steel": 218143104,
+                "Titanium": 463352708,
+                // Components
+                "Electronics": 695543,
+                "Field Stabilizer": 55638485,
+                "Framework": 201924547,
+                "Particle Accelerator": 24834912,
+                "Power Source": 109700921,
+                "Radiation Absorber": 37967778,
+                "Super Conductor": 24834912,
+                "Strange Emitter": 24834912,
+                "Electromagnet": 93820781,
+                // Data
+                "Survey Data Unit": 3593568
             }
         };
 
@@ -1077,7 +1198,18 @@ let MAX_CONTRACT_VALUE = 500000;
                     .replace('Mud Contract Default', 'MUD Contract - Default')
                     .replace('Mud Contract Gottis Favor', "MUD Contract - Gotti's Favor")
                     .replace('Mud Contract Starpath Cells', 'MUD Contract - Starpath Cells')
-                    .replace('Mud Contract Quantum Nodes', 'MUD Contract - Quantum Nodes');
+                    .replace('Mud Contract Quantum Nodes', 'MUD Contract - Quantum Nodes')
+                    .replace('Electromagnet', 'Electromagnet (Component)')
+                    .replace('Electronics', 'Electronics (Compound)')
+                    .replace('Field Stabilizer', 'Field Stabilizer (Component)')
+                    .replace('Framework 2', 'Framework 2 (Component)')
+                    .replace('Framework 3', 'Framework 3 (Component)')
+                    .replace(/^Framework$/, 'Framework (Component)')
+                    .replace('Particle Accelerator', 'Particle Accelerator (Component)')
+                    .replace('Power Source', 'Power Source (Component)')
+                    .replace('Radiation Absorber', 'Radiation Absorber (Component)')
+                    .replace(/^Steel$/, 'Steel (Compound)')
+                    .replace('Fimbul Byos Butch', 'Fimbul BYOS Butch (Ship)');
                 recipeSelect.appendChild(option);
             });
 
