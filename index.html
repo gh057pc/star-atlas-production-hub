@@ -1685,7 +1685,9 @@ function adjustRawMaterialQuantities(selectedRecipeMaterials = []) {
                         compoundAdjustments[material.toLowerCase()].contributions[actualTopComponent] =
                             (compoundAdjustments[material.toLowerCase()].contributions[actualTopComponent] || 0) + totalMaterialUsed;
                         console.log(`🔍 Compound material contribution: ${material} += ${totalMaterialUsed} from ${actualTopComponent} (via ${component})`);
-                    } else if (componentRecipes[material.toLowerCase()]) {
+                    }
+                    // Also recurse if the material has its own recipe (even if it's a compound material)
+                    if (componentRecipes[material.toLowerCase()]) {
                         calculateCompoundMaterialUsage(material, totalMaterialUsed, newPath, actualTopComponent);
                     }
                 });
