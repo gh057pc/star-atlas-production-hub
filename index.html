@@ -1654,10 +1654,10 @@ function adjustRawMaterialQuantities(selectedRecipeMaterials = []) {
             });
         }
 
-        function adjustCompoundMaterialQuantities() {
-            console.log('🚀 adjustCompoundMaterialQuantities() called');
+        function adjustCompoundMaterialQuantities(selectedRecipeMaterials = []) {
+            console.log('🚀 adjustCompoundMaterialQuantities() called with filter:', selectedRecipeMaterials.length > 0 ? 'recipe-specific' : 'all');
             const compoundAdjustments = {};
-            const allCompoundMaterials = Object.keys(resourceGroupMapping).filter(key => 
+            const allCompoundMaterials = Object.keys(resourceGroupMapping).filter(key =>
                 resourceGroupMapping[key] === 'compound material'
             );
 
@@ -1696,7 +1696,9 @@ function adjustRawMaterialQuantities(selectedRecipeMaterials = []) {
             Object.entries(inventory).forEach(([item, data]) => {
                 const component = item.toLowerCase();
                 const resourceGroup = getResourceGroup(component);
-                if (componentRecipes[component] && (resourceGroup === 'component' || resourceGroup === 'compound material')) {
+                // Only process if: no filter provided OR component is in the selected recipe materials
+                const shouldProcess = selectedRecipeMaterials.length === 0 || selectedRecipeMaterials.includes(component);
+                if (componentRecipes[component] && (resourceGroup === 'component' || resourceGroup === 'compound material') && shouldProcess) {
                     calculateCompoundMaterialUsage(component, data.quantity, [], component);
                 }
             });
@@ -2149,7 +2151,7 @@ adjustRawMaterialQuantities();
                 const relevantMaterials = getAllRecipeMaterials(recipe);
                 // Only adjust quantities for relevant materials
                 adjustRawMaterialQuantities(relevantMaterials);
-                adjustCompoundMaterialQuantities();
+                adjustCompoundMaterialQuantities(relevantMaterials);
 
                 const progressContainer = document.getElementById('progressContainer');
                 progressContainer.innerHTML = ''; // Clear existing content
